@@ -12,6 +12,14 @@ from datetime import datetime, timedelta, date
 from collections import defaultdict
 import requests
 import json
+import os
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DB_PATH = os.path.join("/tmp", "app.db")
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+
+SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_PATH}"
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
