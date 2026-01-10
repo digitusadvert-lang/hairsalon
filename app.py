@@ -1,6 +1,11 @@
 # app.py
+import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
-# Add PointsHistory to the import
+from datetime import datetime, timedelta, date
+from collections import defaultdict
+import requests
+import json
+
 from models import db, Customer, Appointment, Referral, SalonSettings, TelegramChat, PointsHistory
 from helpers import (
     generate_referral_code, normalize_phone_number, get_date_color,
@@ -8,40 +13,44 @@ from helpers import (
     send_telegram_to_customer, send_appointment_confirmation
 )
 from config import Config
-from datetime import datetime, timedelta, date
-from collections import defaultdict
-import requests
-import json
-import os
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DB_PATH = os.path.join("/tmp", "app.db")
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-
-SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_PATH}"
-
-
+# =========================
+# CREATE APP FIRST
+# =========================
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# =========================
+# DATABASE CONFIG (Render-safe)
+# =========================
+DB_PATH = "/tmp/app.db"
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# =========================
+# INIT DB
+# =========================
 db.init_app(app)
 
+# =========================
+# CREATE TABLES
+# =========================
 with app.app_context():
     try:
         db.create_all()
-        
-        # Create default settings if they don't exist
+
         if not SalonSettings.query.first():
             default_settings = SalonSettings()
             db.session.add(default_settings)
             db.session.commit()
-        
+
         print("✅ Database ready!")
-        
+
     except Exception as e:
-        print(f"❌ Database error: {e}")
-        print("This is normal if you're adding new models. The database will be updated.")
-        # Don't drop all tables automatically as it will delete data
-        # Just continue with the existing database structure
+        print("❌ Error initializing database:", e)
+
     
     # Try to set Telegram webhook if token exists
     salon_settings = SalonSettings.query.first()
