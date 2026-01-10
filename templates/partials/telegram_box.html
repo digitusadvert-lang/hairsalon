@@ -1,0 +1,11 @@
+<!-- templates/partials/telegram_box.html -->
+<div class="telegram-box">
+    <h3>📱 Telegram Notifications</h3>
+    <p>Get instant appointment confirmations!</p>
+    <a href="{{ config.TELEGRAM_BOT_LINK }}" target="_blank" class="btn btn-telegram">
+        <i class="fab fa-telegram"></i> Open @{{ config.TELEGRAM_BOT_USERNAME }}
+    </a>
+    <div class="telegram-instructions">
+        Click START when the bot opens to connect
+    </div>
+</div>

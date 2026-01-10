@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Hair Salon</title>
+    <style>
+        /* Admin Dashboard Color Overrides */
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            margin: 20px auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0d1b3e 0%, #1a3a7a 100%);
+            color: black;
+            padding: 25px 30px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .header p {
+            margin: 8px 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+            font-weight: 300;
+        }
+        
+        .welcome-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .points-badge {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            padding: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #eaeaea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #1a3a7a;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        /* Flash messages */
+        .flash-message {
+            padding: 15px;
+            margin: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Form controls */
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, #2a5298 0%, #1a3a7a 100%);
+            color: white;
+            padding: 14px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #1a3a7a 0%, #0d1b3e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(42, 82, 152, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Telegram button */
+        a[href*="telegram"][class*="btn"] {
+            background: linear-gradient(135deg, #0088cc 0%, #006699 100%) !important;
+        }
+        
+        a[href*="telegram"][class*="btn"]:hover {
+            background: linear-gradient(135deg, #006699 0%, #004d66 100%) !important;
+        }
+        
+        /* Calendar styles */
+        .calendar-weekdays {
+            background: #f8f9fa;
+        }
+        
+        .weekday-header {
+            color: #1a3a7a;
+            font-weight: 600;
+            padding: 12px 0;
+        }
+        
+        .calendar-day-cell {
+            border: 1px solid #e9ecef;
+            background: white;
+            transition: all 0.2s;
+        }
+        
+        .calendar-day-cell.today {
+            background: #e7f7ff !important;
+            border: 2px solid #007bff !important;
+        }
+        
+        .calendar-day-cell.selected {
+            background: #f0fff4 !important;
+            border: 2px solid #28a745 !important;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1) !important;
+        }
+        
+        .calendar-day-cell.available {
+            background: #f8fff9;
+        }
+        
+        .calendar-day-cell.medium {
+            background: #fffcf5;
+        }
+        
+        .calendar-day-cell.full {
+            background: #fff8f8;
+        }
+        
+        .date-number {
+            color: #1a3a7a;
+            font-weight: bold;
+        }
+        
+        /* Time slots */
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .time-slot {
+            padding: 12px;
+            background: #e8f4fc;
+            border: 2px solid #b3e0ff;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .time-slot:hover {
+            background: #d4edfa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .time-slot.selected {
+            background: #3498db !important;
+            color: white !important;
+            border-color: #2980b9 !important;
+            box-shadow: 0 2px 10px rgba(52, 152, 219, 0.4) !important;
+        }
+        
+        /* Referral section */
+        .referral-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .referral-link {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            word-break: break-all;
+            border: 1px solid #dee2e6;
+            font-size: 14px;
+        }
+        
+        /* Appointments list */
+        .appointments-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .appointment-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background: #fafafa;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+        
+        .appointment-item:hover {
+            background: #f5f5f5;
+        }
+        
+        /* Status badges */
+        .status-confirmed {
+            color: #28a745;
+            font-weight: bold;
+            background: #d4edda;
+            padding: 4px 10px;
+            border-radius: 15px;
+            display: inline-block;
+            font-size: 13px;
+        }
+        
+        .status-completed {
+            color: #17a2b8;
+            font-weight: bold;
+            background: #d1ecf1;
+            padding: 4px 10px;
+            border-radius: 15px;
+            display: inline-block;
+            font-size: 13px;
+        }
+        
+        .status-cancelled {
+            color: #dc3545;
+            font-weight: bold;
+            background: #f8d7da;
+            padding: 4px 10px;
+            border-radius: 15px;
+            display: inline-block;
+            font-size: 13px;
+        }
+        
+        /* Telegram connected box */
+        div[style*="background: #d4edda"] {
+            background: #d4edda !important;
+            padding: 10px !important;
+            border-radius: 6px !important;
+            border-left: 4px solid #28a745 !important;
+            margin-top: 10px !important;
+        }
+        
+        /* Telegram steps box */
+        div[style*="background: #fff3cd"] {
+            background: #fff3cd !important;
+            padding: 15px !important;
+            border-radius: 8px !important;
+            border-left: 4px solid #ffc107 !important;
+            margin: 10px 0 !important;
+        }
+        
+        div[style*="background: #fff3cd"] p {
+            margin: 0 0 10px 0 !important;
+            font-weight: 600 !important;
+            color: #856404 !important;
+        }
+        
+        /* Booking message */
+        #booking-message .success {
+            background: #d4edda !important;
+            color: #155724 !important;
+            padding: 10px !important;
+            border-radius: 6px !important;
+            border: 1px solid #c3e6cb !important;
+        }
+        
+        #booking-message .error {
+            background: #f8d7da !important;
+            color: #721c24 !important;
+            padding: 10px !important;
+            border-radius: 6px !important;
+            border: 1px solid #f5c6cb !important;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                margin: 10px auto;
+                border-radius: 10px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .welcome-section {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .time-slots {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .btn {
+                padding: 12px 20px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="welcome-section">
+                <div>
+                    <h1>Welcome, {{ customer.name }}!</h1>
+                    <p>Manage your appointments and rewards</p>
+                </div>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <div class="points-badge">
+                        Points: {{ customer.points }}
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                </div>
+            </div>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="dashboard-grid">
+            <!-- Book Appointment Card -->
+            <div class="card">
+                <h3>📅 Book Appointment</h3>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="service">Select Service:</label>
+                    <select id="service" class="form-control" style="width: 100%; padding: 10px; margin-top: 5px;">
+                        {% for service in services %}
+                        <option value="{{ service }}">{{ service }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="appointment-date" style="display: block; margin-bottom: 10px; font-weight: bold;">
+                        Select Date:
+                    </label>
+                    
+                <div class="calendar-container">
+                    <!-- Weekday headers -->
+                    <div class="calendar-weekdays">
+                        <div class="weekday-header">Mon</div>
+                        <div class="weekday-header">Tue</div>
+                        <div class="weekday-header">Wed</div>
+                        <div class="weekday-header">Thu</div>
+                        <div class="weekday-header">Fri</div>
+                        <div class="weekday-header">Sat</div>
+                        <div class="weekday-header">Sun</div>
+                    </div>
+                    
+                    <!-- Calendar grid -->
+                    <div class="calendar-grid">
+                        {% for day in calendar_days %}
+                        <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %}"
+                             data-date="{{ day.date.isoformat() }}"
+                             onclick="selectDate('{{ day.date.isoformat() }}', this)">
+                            
+                            <div class="date-number">
+                                {{ day.day }}
+                            </div>
+                            
+                            <div class="date-count">
+                                {{ day.count }}/{{ day.max }}
+                            </div>
+                            
+                            <div class="date-status">
+                                {{ day.status }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Fill empty cells if needed (42 cells for 6 weeks) -->
+                        {% for i in range(42 - calendar_days|length) %}
+                        <div class="calendar-empty-cell"></div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Mobile Legend -->
+                <div class="mobile-legend">
+                    <div class="legend-item">
+                        <span class="legend-color available"></span>
+                        <span>Available - Green</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color medium"></span>
+                        <span>Few Left - Yellow</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color full"></span>
+                        <span>Full - Red</span>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="time-slot">Select Time:</label>
+                    <div class="time-slots" id="time-slots-container">
+                        <!-- Time slots will be loaded here -->
+                        <p>Select a date first</p>
+                    </div>
+                </div>
+                
+                <button class="btn" id="book-btn" onclick="bookAppointment()" disabled>
+                    Book Appointment (10 points)
+                </button>
+                <div id="booking-message" style="margin-top: 10px;"></div>
+            </div>
+            
+            <!-- Referral Program Card -->
+            <div class="card">
+                <h3>🎁 Referral Program</h3>
+                
+                <div class="referral-info">
+                    <p><strong>Earn 5 points for each successful referral!</strong></p>
+                    <p>Successful referrals: {{ successful_referrals }}</p>
+                    <p>Pending referrals: {{ pending_referrals }}</p>
+                    
+                    {% if customer.telegram_id %}
+                    <div style="margin-top: 10px; padding: 10px; background: #d4edda; border-radius: 4px;">
+                        <p style="margin: 0;">✅ Telegram Connected: @{{ customer.telegram_id }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <p>Your referral link:</p>
+                    <div class="referral-link">{{ referral_url }}</div>
+                    <button class="btn" onclick="copyReferralLink()" style="margin-top: 10px;">
+                        Copy Link
+                    </button>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h4>📱 Telegram Notifications</h4>
+                    
+                    {% if not customer.telegram_id %}
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                        <p style="margin: 0 0 10px 0;"><strong>Steps to connect:</strong></p>
+                        <ol style="margin: 0 0 0 20px; padding: 0;">
+                            <li>Click the button below to open our bot</li>
+                            <li>Click <strong>START</strong> when the bot opens</li>
+                            <li>Use <code>/link {{ customer.phone }}</code> in Telegram</li>
+                            <li>You'll receive instant appointment notifications!</li>
+                        </ol>
+                    </div>
+                    {% endif %}
+                    
+                    <a href="{{ TELEGRAM_BOT_LINK }}" target="_blank" class="btn" style="background: #0088cc; margin-top: 10px;">
+                        <i class="fab fa-telegram"></i> 
+                        {% if customer.telegram_id %}
+                            Open Telegram Bot
+                        {% else %}
+                            Connect Telegram Bot
+                        {% endif %}
+                    </a>
+                    
+                    {% if customer.telegram_id %}
+                    <div style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+                        <p>✅ You'll receive appointment confirmations and reminders</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Recent Appointments Card -->
+            <div class="card">
+                <h3>📋 Recent Appointments</h3>
+                
+                {% if appointments %}
+                <ul class="appointments-list">
+                    {% for appointment in appointments %}
+                    <li class="appointment-item">
+                        <div><strong>{{ appointment.service_type }}</strong></div>
+                        <div>Date: {{ appointment.appointment_time.strftime('%Y-%m-%d') }}</div>
+                        <div>Time: {{ appointment.appointment_time.strftime('%I:%M %p') }}</div>
+                        <div class="status-{{ appointment.status }}">
+                            Status: {{ appointment.status|title }}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>No appointments yet.</p>
+                {% endif %}
+                
+                <a href="#" class="btn" style="display: block; text-align: center; margin-top: 15px;">
+                    View All Appointments
+                </a>
+            </div>
+            
+            <!-- Points History Card -->
+            <div class="card">
+                <h3>💰 Points History</h3>
+                <p>Current Points: <strong>{{ customer.points }}</strong></p>
+                <p>Points earned from referrals: {{ successful_referrals * 5 }}</p>
+                <p>Points spent on appointments: {{ (customer.points_spent or 0) }}</p>
+                
+                <div style="margin-top: 20px;">
+                    <h4>How to earn points:</h4>
+                    <ul>
+                        <li>Registration: 10 points</li>
+                        <li>Successful referral: 5 points</li>
+                        <li>Completed appointment: 20 points</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedDate = null;
+        let selectedTime = null;
+        let selectedService = null;
+        
+        function loadTimeSlots(date) {
+            const container = document.getElementById('time-slots-container');
+            container.innerHTML = '<p>Loading time slots...</p>';
+            
+            fetch(`/api/time-slots?date=${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        container.innerHTML = `<p class="error">${data.error}</p>`;
+                        return;
+                    }
+                    
+                    if (data.time_slots.length === 0) {
+                        container.innerHTML = '<p>No available time slots for this date.</p>';
+                        return;
+                    }
+                    
+                    container.innerHTML = '';
+                    data.time_slots.forEach(slot => {
+                        const slotElement = document.createElement('div');
+                        slotElement.className = 'time-slot';
+                        slotElement.textContent = slot.time;
+                        slotElement.dataset.datetime = slot.datetime;
+                        slotElement.onclick = () => selectTime(slot.datetime, slotElement);
+                        container.appendChild(slotElement);
+                    });
+                })
+                .catch(error => {
+                    container.innerHTML = '<p>Error loading time slots.</p>';
+                    console.error(error);
+                });
+        }
+        
+        function selectTime(datetime, element) {
+            selectedTime = datetime;
+            
+            // Reset all time slots
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.style.background = '#e8f4fc';
+                slot.style.color = 'inherit';
+                slot.classList.remove('selected');
+            });
+            
+            // Highlight selected time
+            element.classList.add('selected');
+            element.style.background = '#3498db';
+            element.style.color = 'white';
+            
+            // Enable book button
+            const bookBtn = document.getElementById('book-btn');
+            bookBtn.disabled = false;
+        }
+        
+        function bookAppointment() {
+            if (!selectedDate || !selectedTime) {
+                alert('Please select both date and time');
+                return;
+            }
+            
+            const service = document.getElementById('service').value;
+            const bookBtn = document.getElementById('book-btn');
+            const messageDiv = document.getElementById('booking-message');
+            
+            bookBtn.disabled = true;
+            bookBtn.textContent = 'Booking...';
+            messageDiv.innerHTML = '';
+            
+            const formData = new FormData();
+            formData.append('date', selectedDate);
+            formData.append('time', selectedTime);
+            formData.append('service', service);
+            
+            fetch('/book-appointment', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    messageDiv.innerHTML = `<div class="success">${data.message}</div>`;
+                    bookBtn.textContent = 'Appointment Booked!';
+                    
+                    // Update points display
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    messageDiv.innerHTML = `<div class="error">${data.error}</div>`;
+                    bookBtn.disabled = false;
+                    bookBtn.textContent = 'Book Appointment (10 points)';
+                }
+            })
+            .catch(error => {
+                messageDiv.innerHTML = `<div class="error">Network error. Please try again.</div>`;
+                bookBtn.disabled = false;
+                bookBtn.textContent = 'Book Appointment (10 points)';
+                console.error(error);
+            });
+        }
+        
+        function copyReferralLink() {
+            const link = "{{ referral_url }}";
+            navigator.clipboard.writeText(link)
+                .then(() => alert('Referral link copied to clipboard!'))
+                .catch(err => console.error('Failed to copy: ', err));
+        }
+        
+        // Check points periodically
+        function checkPoints() {
+            fetch('/api/check-points')
+                .then(response => response.json())
+                .then(data => {
+                    const pointsBadge = document.querySelector('.points-badge');
+                    if (pointsBadge) {
+                        pointsBadge.textContent = `Points: ${data.points}`;
+                    }
+                });
+        }
+        
+        // Check points every 30 seconds
+        setInterval(checkPoints, 30000);
+        
+        // Initial service selection
+        document.getElementById('service').addEventListener('change', function() {
+            selectedService = this.value;
+        });
+        
+        // Check screen width and show/hide legend
+        function updateCalendarForMobile() {
+            const legend = document.querySelector('.mobile-legend');
+            if (window.innerWidth <= 768) {
+                if (legend) legend.style.display = 'block';
+                
+                // Adjust calendar container for mobile
+                const calendarContainer = document.querySelector('.calendar-container');
+                if (calendarContainer) {
+                    calendarContainer.style.padding = '10px';
+                }
+            } else {
+                if (legend) legend.style.display = 'none';
+            }
+        }
+        
+        // Run on load and resize
+        window.addEventListener('load', updateCalendarForMobile);
+        window.addEventListener('resize', updateCalendarForMobile);
+        
+        // Improved selectDate function for mobile
+        function selectDate(date, element) {
+            selectedDate = date;
+            
+            // Reset all calendar cells
+            document.querySelectorAll('.calendar-day-cell').forEach(day => {
+                day.style.border = '1px solid #e0e0e0';
+                day.style.background = '';
+                day.classList.remove('selected');
+            });
+            
+            // Highlight selected date
+            element.classList.add('selected');
+            element.style.border = '2px solid #28a745';
+            element.style.background = '#f0fff4';
+            
+            // Add box shadow for better visibility
+            element.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            
+            // Load time slots
+            loadTimeSlots(date);
+            
+            // Scroll into view on mobile
+            if (window.innerWidth <= 768) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+    </script>
+</body>
+</html>

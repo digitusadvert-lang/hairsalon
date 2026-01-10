@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments Management - HS Salon Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            margin: 20px auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0d1b3e 0%, #1a3a7a 100%);
+            color: white;
+            padding: 25px 30px;
+            position: relative;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-subtitle {
+            margin: 8px 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+            font-weight: 300;
+        }
+        
+        .admin-nav {
+            background: #2a5298;
+            padding: 0;
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+        }
+        
+        .admin-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 1px;
+        }
+        
+        .admin-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 18px 25px;
+            display: inline-block;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 4px solid transparent;
+            font-size: 15px;
+        }
+        
+        .admin-nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .admin-nav a.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom: 4px solid #4CAF50;
+        }
+        
+        .admin-nav a i {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .welcome-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+        
+        .dashboard-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dashboard-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #eaeaea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 25px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #1a3a7a;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f4f8;
+        }
+        
+        .card h2 i {
+            color: #2a5298;
+            font-size: 20px;
+        }
+        
+        /* Filter Styles */
+        .filter-card {
+            background: #f8fafc;
+            border: 1px solid #e9ecef;
+        }
+        
+        .filters-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        select, input[type="date"] {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        select:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        
+        /* Button Styles */
+        .btn {
+            background: linear-gradient(135deg, #2a5298 0%, #1a3a7a 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #1a3a7a 0%, #0d1b3e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(42, 82, 152, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2a5298 0%, #1a3a7a 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #1e7e34 0%, #145523 100%);
+        }
+        
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 13px;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #2a5298;
+            border: 2px solid #2a5298;
+        }
+        
+        .btn-outline:hover {
+            background: #2a5298;
+            color: white;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        th {
+            background: #f8fafc;
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 700;
+            color: #1a3a7a;
+            border-bottom: 3px solid #e9ecef;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+        }
+        
+        td {
+            padding: 18px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        
+        tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        /* Status badges */
+        .status-badge {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            display: inline-block;
+            letter-spacing: 0.3px;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status-confirmed {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-completed {
+            background-color: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+        
+        .status-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Customer info */
+        .customer-info {
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .customer-name {
+            font-weight: 600;
+            color: #1a3a7a;
+            font-size: 15px;
+        }
+        
+        /* Statistics */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f4f8;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #2a5298;
+        }
+        
+        .stat-item .number {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1a3a7a;
+            margin-bottom: 5px;
+        }
+        
+        .stat-item .label {
+            font-size: 13px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* No data message */
+        .no-data {
+            text-align: center;
+            padding: 50px 20px;
+            color: #6c757d;
+        }
+        
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .no-data p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        /* Flash messages */
+        .flash-message {
+            padding: 18px;
+            margin: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 15px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px auto;
+                border-radius: 10px;
+            }
+            
+            .admin-nav ul {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .admin-nav a {
+                padding: 15px 20px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            
+            .filters-container {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        /* Header badge */
+        .admin-badge {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .appointment-id {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #2a5298;
+            font-size: 13px;
+        }
+        
+        .telegram-badge {
+            display: inline-block;
+            background: #0088cc;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="welcome-section">
+                <div>
+                    <h1>HS Salon Appointments</h1>
+                    <p class="header-subtitle">View, filter, and manage all salon appointments</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin_dashboard') }}" class="dashboard-btn">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </a>
+                    <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+            <div class="admin-badge">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="admin-nav">
+            <div class="nav-container">
+                <ul>
+                    <li><a href="{{ url_for('admin_dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a></li>
+                    <li><a href="{{ url_for('admin_appointments') }}" class="active">
+                        <i class="fas fa-calendar-check"></i> Appointments
+                    </a></li>
+                    <li><a href="{{ url_for('admin_customers') }}">
+                        <i class="fas fa-users"></i> Customers
+                    </a></li>
+                    <li><a href="{{ url_for('admin_settings') }}">
+                        <i class="fas fa-cog"></i> Settings
+                    </a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <div style="padding: 30px;">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Filter Card -->
+            <div class="card filter-card">
+                <h2><i class="fas fa-filter"></i> Filter Appointments</h2>
+                <form method="GET" action="{{ url_for('admin_appointments') }}">
+                    <div class="filters-container">
+                        <div class="filter-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status">
+                                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="date">Date</label>
+                            <input type="date" id="date" name="date" value="{{ date_filter }}">
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button type="submit" class="btn">
+                            <i class="fas fa-search"></i> Apply Filters
+                        </button>
+                        <a href="{{ url_for('admin_appointments') }}" class="btn btn-outline">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Appointments Card -->
+            <div class="card">
+                <h2><i class="fas fa-calendar-alt"></i> All Appointments</h2>
+                
+                {% if appointments %}
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date & Time</th>
+                                <th>Customer</th>
+                                <th>Service</th>
+                                <th>Duration</th>
+                                <th>Points</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appointment in appointments %}
+                            <tr>
+                                <td><span class="appointment-id">#{{ appointment.id }}</span></td>
+                                <td>
+                                    <strong>{{ appointment.appointment_time.strftime('%Y-%m-%d') }}</strong><br>
+                                    <span class="customer-info">{{ appointment.appointment_time.strftime('%I:%M %p') }}</span>
+                                </td>
+                                <td>
+                                    <div class="customer-name">{{ appointment.customer.name }}</div>
+                                    <div class="customer-info">{{ appointment.customer.phone }}</div>
+                                    {% if appointment.customer.telegram_id %}
+                                    <span class="telegram-badge">
+                                        <i class="fab fa-telegram"></i> @{{ appointment.customer.telegram_id }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ appointment.service_type }}</td>
+                                <td>{{ appointment.duration }} min</td>
+                                <td><strong>{{ appointment.points_deducted or 0 }}</strong></td>
+                                <td>
+                                    <span class="status-badge status-{{ appointment.status }}">
+                                        {{ appointment.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        {% if appointment.status == 'confirmed' %}
+                                        <button type="button" class="btn btn-success btn-sm complete-appointment-btn" 
+                                                data-appointment-id="{{ appointment.id }}"
+                                                data-customer-name="{{ appointment.customer.name }}">
+                                            <i class="fas fa-check"></i> Complete
+                                        </button>
+                                        {% endif %}
+                                        {% if appointment.status == 'pending' %}
+                                        <form action="{{ url_for('confirm_appointment') }}" method="POST" style="display: inline;">
+                                            <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
+                                            <button type="submit" class="btn btn-success btn-sm" 
+                                                    onclick="return confirm('Confirm this appointment?')">
+                                                <i class="fas fa-check-circle"></i> Confirm
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="no-data">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>No appointments found</p>
+                    {% if status_filter != 'all' or date_filter %}
+                    <p>Try changing your filters</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- Appointment Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="number">{{ appointments|length }}</div>
+                        <div class="label">Total</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="number">{{ appointments|selectattr('status', 'equalto', 'confirmed')|list|length }}</div>
+                        <div class="label">Confirmed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="number">{{ appointments|selectattr('status', 'equalto', 'completed')|list|length }}</div>
+                        <div class="label">Completed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="number">{{ appointments|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+                        <div class="label">Pending</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// Handle Complete button clicks
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.complete-appointment-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const appointmentId = this.getAttribute('data-appointment-id');
+            const customerName = this.getAttribute('data-customer-name');
+            
+            if (confirm(`Mark appointment as completed for ${customerName}?`)) {
+                completeAppointment(appointmentId, this);
+            }
+        });
+    });
+});
+
+function completeAppointment(appointmentId, buttonElement) {
+    // Show loading state
+    const originalHTML = buttonElement.innerHTML;
+    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing...';
+    buttonElement.disabled = true;
+    
+    // Get the row
+    const row = buttonElement.closest('tr');
+    
+    fetch('/complete-appointment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `appointment_id=${appointmentId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success notification
+            showNotification(data.message, 'success');
+            
+            // Update the appointment row - FIXED SELECTORS
+            if (row) {
+                // Find the status cell (usually the cell with the status badge)
+                const cells = row.querySelectorAll('td');
+                let statusCell = null;
+                
+                // Look for the cell containing the status badge
+                cells.forEach(cell => {
+                    if (cell.innerHTML.includes('badge') || cell.classList.contains('status')) {
+                        statusCell = cell;
+                    }
+                });
+                
+                // Update status
+                if (statusCell) {
+                    statusCell.innerHTML = '<span class="status-badge status-completed">Completed</span>';
+                } else {
+                    // If we can't find the specific cell, update the 7th cell (adjust as needed)
+                    if (cells.length >= 7) {
+                        cells[6].innerHTML = '<span class="status-badge status-completed">Completed</span>';
+                    }
+                }
+                
+                // Remove the Complete button
+                const buttonCell = buttonElement.closest('td');
+                if (buttonCell) {
+                    buttonCell.innerHTML = '<span class="text-success" style="display: flex; align-items: center; gap: 5px;"><i class="fas fa-check-circle"></i> Completed</span>';
+                }
+            }
+        } else {
+            // Show error
+            showNotification(data.error || 'Error completing appointment', 'error');
+            
+            // Reset button
+            buttonElement.innerHTML = originalHTML;
+            buttonElement.disabled = false;
+        }
+    })
+    .catch(error => {
+        showNotification('Network error: ' + error, 'error');
+        buttonElement.innerHTML = originalHTML;
+        buttonElement.disabled = false;
+    });
+}
+
+// Simple notification function
+function showNotification(message, type = 'success') {
+    // Remove any existing notifications
+    document.querySelectorAll('.custom-notification').forEach(el => el.remove());
+    
+    // Create notification
+    const notification = document.createElement('div');
+    notification.className = `custom-notification ${type}`;
+    
+    // Set icon based on type
+    const icon = type === 'success' ? '✓' : '✗';
+    const title = type === 'success' ? 'Success!' : 'Error!';
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <div style="font-size: 20px; margin-top: 2px;">${icon}</div>
+            <div style="flex: 1;">
+                <strong style="display: block; margin-bottom: 4px;">${title}</strong>
+                <div style="font-size: 14px;">${message}</div>
+            </div>
+            <button type="button" onclick="this.parentElement.parentElement.remove()" 
+                    style="background: none; border: none; font-size: 16px; cursor: pointer; color: #666; padding: 0; margin: 0;">
+                ×
+            </button>
+        </div>
+    `;
+    
+    // Apply styles
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 320px;
+        max-width: 400px;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        border-left: 4px solid;
+        background: white;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    // Set colors based on type
+    if (type === 'success') {
+        notification.style.borderLeftColor = '#28a745';
+        notification.style.backgroundColor = '#d4edda';
+        notification.style.color = '#155724';
+    } else {
+        notification.style.borderLeftColor = '#dc3545';
+        notification.style.backgroundColor = '#f8d7da';
+        notification.style.color = '#721c24';
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Make sure animation CSS is added
+if (!document.querySelector('#notification-animation')) {
+    const style = document.createElement('style');
+    style.id = 'notification-animation';
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Add CSS animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+
+</body>
+</html>

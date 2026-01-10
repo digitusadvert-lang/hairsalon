@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Settings - HS Salon Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            margin: 20px auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0d1b3e 0%, #1a3a7a 100%);
+            color: white;
+            padding: 25px 30px;
+            position: relative;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-subtitle {
+            margin: 8px 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+            font-weight: 300;
+        }
+        
+        .admin-nav {
+            background: #2a5298;
+            padding: 0;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+        }
+        
+        .admin-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 1px;
+        }
+        
+        .admin-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 18px 25px;
+            display: inline-block;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 4px solid transparent;
+            font-size: 15px;
+        }
+        
+        .admin-nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .admin-nav a.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom: 4px solid #4CAF50;
+        }
+        
+        .admin-nav a i {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .welcome-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+        
+        .dashboard-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dashboard-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #eaeaea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 25px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 30px;
+            color: #1a3a7a;
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f4f8;
+        }
+        
+        .card h2 i {
+            color: #2a5298;
+            font-size: 22px;
+        }
+        
+        /* Form Styles */
+        .section-title {
+            color: #1a3a7a;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f4f8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #2a5298;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        input[type="password"],
+        input[type="time"],
+        input[type="email"],
+        select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        
+        .form-hint {
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        
+        /* Button Styles */
+        .btn {
+            background: linear-gradient(135deg, #2a5298 0%, #1a3a7a 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #1a3a7a 0%, #0d1b3e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(42, 82, 152, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #1e7e34 0%, #145523 100%);
+        }
+        
+        /* System Status Grid */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .status-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #2a5298;
+        }
+        
+        .status-card h4 {
+            color: #1a3a7a;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-card h4 i {
+            color: #2a5298;
+        }
+        
+        .status-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .status-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .status-value {
+            font-weight: 600;
+            color: #1a3a7a;
+            font-size: 14px;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .status-connected {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+        }
+        
+        .status-disconnected {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+        }
+        
+        /* Flash messages */
+        .flash-message {
+            padding: 18px;
+            margin: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 15px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .flash-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px auto;
+                border-radius: 10px;
+            }
+            
+            .admin-nav ul {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .admin-nav a {
+                padding: 15px 20px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+        }
+        
+        /* Header badge */
+        .admin-badge {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* Save button container */
+        .save-container {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f4f8;
+        }
+        
+        /* Webhook info */
+        .webhook-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0088cc;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #495057;
+        }
+        
+        .webhook-info strong {
+            color: #1a3a7a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="welcome-section">
+                <div>
+                    <h1>HS Salon System Settings</h1>
+                    <p class="header-subtitle">Configure business settings, appointments, and integrations</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin_dashboard') }}" class="dashboard-btn">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </a>
+                    <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+            <div class="admin-badge">
+                <i class="fas fa-cog"></i>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="admin-nav">
+            <div class="nav-container">
+                <ul>
+                    <li><a href="{{ url_for('admin_dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a></li>
+                    <li><a href="{{ url_for('admin_appointments') }}">
+                        <i class="fas fa-calendar-check"></i> Appointments
+                    </a></li>
+                    <li><a href="{{ url_for('admin_customers') }}">
+                        <i class="fas fa-users"></i> Customers
+                    </a></li>
+                    <li><a href="{{ url_for('admin_settings') }}" class="active">
+                        <i class="fas fa-cog"></i> Settings
+                    </a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <div style="padding: 30px;">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Settings Configuration Card -->
+            <div class="card">
+                <h2><i class="fas fa-sliders-h"></i> System Configuration</h2>
+                
+                <form action="{{ url_for('admin_settings') }}" method="POST">
+                    <!-- Business Information Section -->
+                    <h3 class="section-title"><i class="fas fa-building"></i> Business Information</h3>
+                    <div class="form-group">
+                        <label for="business_name">Business Name</label>
+                        <input type="text" id="business_name" name="business_name" 
+                               value="{{ salon_settings.business_name or 'HS Salon' }}" required>
+                        <div class="form-hint">This name appears in notifications and customer communications</div>
+                    </div>
+                    
+                    <!-- Appointment Settings Section -->
+                    <h3 class="section-title"><i class="fas fa-calendar-alt"></i> Appointment Settings</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="max_daily_appointments">Max Daily Appointments</label>
+                            <input type="number" id="max_daily_appointments" name="max_daily_appointments" 
+                                   value="{{ salon_settings.max_daily_appointments or 10 }}" min="1" max="50" required>
+                            <div class="form-hint">Maximum appointments allowed per day</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="appointment_duration">Appointment Duration (minutes)</label>
+                            <input type="number" id="appointment_duration" name="appointment_duration" 
+                                   value="{{ salon_settings.appointment_duration or 60 }}" min="15" max="240" step="15" required>
+                            <div class="form-hint">Duration per appointment in minutes (15 minute increments)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="working_hours_start">Working Hours Start</label>
+                            <input type="time" id="working_hours_start" name="working_hours_start" 
+                                   value="{{ salon_settings.working_hours_start or '09:00' }}" required>
+                            <div class="form-hint">Start time for daily appointments</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="working_hours_end">Working Hours End</label>
+                            <input type="time" id="working_hours_end" name="working_hours_end" 
+                                   value="{{ salon_settings.working_hours_end or '18:00' }}" required>
+                            <div class="form-hint">End time for daily appointments</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Telegram Integration Section -->
+                    <h3 class="section-title"><i class="fab fa-telegram"></i> Telegram Bot Integration</h3>
+                    <div class="form-group">
+                        <label for="telegram_bot_token">Telegram Bot Token</label>
+                        <input type="text" id="telegram_bot_token" name="telegram_bot_token" 
+                               value="{{ salon_settings.telegram_bot_token or '' }}" 
+                               placeholder="Enter your Telegram bot token">
+                        <div class="form-hint">Get token from @BotFather on Telegram</div>
+                        <div class="webhook-info">
+                            <strong>Webhook URL:</strong> {{ request.host_url }}telegram-webhook
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="telegram_chat_id">Telegram Chat ID</label>
+                        <input type="text" id="telegram_chat_id" name="telegram_chat_id" 
+                               value="{{ salon_settings.telegram_chat_id or '' }}" 
+                               placeholder="Auto-filled when bot receives message" readonly>
+                        <div class="form-hint">Will be auto-filled when admin sends message to bot</div>
+                    </div>
+                    
+                    <!-- Admin Security Section -->
+                    <h3 class="section-title"><i class="fas fa-user-shield"></i> Admin Security</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="admin_username">Admin Username</label>
+                            <input type="text" id="admin_username" name="admin_username" 
+                                   value="{{ salon_settings.admin_username or 'admin' }}" required>
+                            <div class="form-hint">Username for admin dashboard access</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="admin_password">Admin Password</label>
+                            <input type="password" id="admin_password" name="admin_password" 
+                                   placeholder="Leave blank to keep current password">
+                            <div class="form-hint">Only enter if you want to change password (minimum 8 characters)</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Save Button -->
+                    <div class="save-container">
+                        <button type="submit" class="btn">
+                            <i class="fas fa-save"></i> Save All Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Current System Status Card -->
+            <div class="card">
+                <h2><i class="fas fa-info-circle"></i> Current System Status</h2>
+                
+                <div class="status-grid">
+                    <div class="status-card">
+                        <h4><i class="fas fa-building"></i> Business</h4>
+                        <div class="status-item">
+                            <span class="status-label">Name</span>
+                            <span class="status-value">{{ salon_settings.business_name or 'HS Salon' }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h4><i class="fas fa-calendar-alt"></i> Appointments</h4>
+                        <div class="status-item">
+                            <span class="status-label">Max/Day</span>
+                            <span class="status-value">{{ salon_settings.max_daily_appointments or 10 }}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Duration</span>
+                            <span class="status-value">{{ salon_settings.appointment_duration or 60 }} min</span>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h4><i class="fas fa-clock"></i> Working Hours</h4>
+                        <div class="status-item">
+                            <span class="status-label">Start</span>
+                            <span class="status-value">{{ salon_settings.working_hours_start or '09:00' }}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">End</span>
+                            <span class="status-value">{{ salon_settings.working_hours_end or '18:00' }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h4><i class="fab fa-telegram"></i> Telegram</h4>
+                        <div class="status-item">
+                            <span class="status-label">Status</span>
+                            <span class="status-badge {% if salon_settings.telegram_chat_id %}status-connected{% else %}status-disconnected{% endif %}">
+                                {% if salon_settings.telegram_chat_id %}
+                                <i class="fas fa-check-circle"></i> Connected
+                                {% else %}
+                                <i class="fas fa-times-circle"></i> Not Connected
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if salon_settings.telegram_chat_id %}
+                        <div class="status-item">
+                            <span class="status-label">Chat ID</span>
+                            <span class="status-value">{{ salon_settings.telegram_chat_id }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

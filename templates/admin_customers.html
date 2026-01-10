@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers Management - HS Salon Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            margin: 20px auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0d1b3e 0%, #1a3a7a 100%);
+            color: white;
+            padding: 25px 30px;
+            position: relative;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-subtitle {
+            margin: 8px 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+            font-weight: 300;
+        }
+        
+        .admin-nav {
+            background: #2a5298;
+            padding: 0;
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+        }
+        
+        .admin-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 1px;
+        }
+        
+        .admin-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 18px 25px;
+            display: inline-block;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 4px solid transparent;
+            font-size: 15px;
+        }
+        
+        .admin-nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .admin-nav a.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom: 4px solid #4CAF50;
+        }
+        
+        .admin-nav a i {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .welcome-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+        
+        .dashboard-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dashboard-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #eaeaea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 25px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #1a3a7a;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f4f8;
+        }
+        
+        .card h2 i {
+            color: #2a5298;
+            font-size: 20px;
+        }
+        
+        /* Statistics Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 5px solid #2a5298;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(42, 82, 152, 0.15);
+        }
+        
+        .stat-card h3 {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: 800;
+            color: #1a3a7a;
+            margin: 10px 0;
+            line-height: 1;
+        }
+        
+        .stat-card .icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: #2a5298;
+            opacity: 0.9;
+        }
+        
+        /* Search Box */
+        .search-container {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 18px;
+        }
+        
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        th {
+            background: #f8fafc;
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 700;
+            color: #1a3a7a;
+            border-bottom: 3px solid #e9ecef;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+        }
+        
+        td {
+            padding: 18px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
+        }
+        
+        tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        /* Customer Avatar */
+        .customer-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2a5298 0%, #1a3a7a 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        
+        /* Badges */
+        .points-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .telegram-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #0088cc;
+            color: white;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 3px;
+        }
+        
+        .referral-code {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .premium-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #856404;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .regular-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        /* Button Styles */
+        .btn {
+            background: linear-gradient(135deg, #2a5298 0%, #1a3a7a 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #1a3a7a 0%, #0d1b3e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(42, 82, 152, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #1e7e34 0%, #145523 100%);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #e0a800 0%, #c69500 100%);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+        }
+        
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 13px;
+        }
+        
+        .btn-xs {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        /* Insights Grid */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .insight-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #2a5298;
+        }
+        
+        .insight-card h4 {
+            color: #1a3a7a;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .insight-card h4 i {
+            color: #2a5298;
+        }
+        
+        .insight-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .insight-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .insight-list li:last-child {
+            border-bottom: none;
+        }
+        
+        /* No data message */
+        .no-data {
+            text-align: center;
+            padding: 50px 20px;
+            color: #6c757d;
+        }
+        
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .no-data p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        /* Flash messages */
+        .flash-message {
+            padding: 18px;
+            margin: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 15px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            margin-bottom: 25px;
+            border-bottom: 2px solid #f0f4f8;
+            padding-bottom: 15px;
+        }
+        
+        .modal-header h3 {
+            color: #1a3a7a;
+            margin: 0;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal-body {
+            margin-bottom: 25px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        
+        .form-control[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .close-btn:hover {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+        
+        /* Quick actions in table */
+        .quick-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        .quick-actions .btn {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+        
+        /* Points column styling */
+        .points-cell {
+            position: relative;
+        }
+        
+        .points-value {
+            font-weight: 700;
+            color: #1a3a7a;
+            font-size: 15px;
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px auto;
+                border-radius: 10px;
+            }
+            
+            .admin-nav ul {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .admin-nav a {
+                padding: 15px 20px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        /* Header badge */
+        .admin-badge {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .customer-id {
+            font-family: 'Courier New', monospace;
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        /* Export buttons */
+        .export-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        /* Points adjustment badge */
+        .adjustment-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .adjustment-positive {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .adjustment-negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .points-history-link {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .points-history-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="welcome-section">
+                <div>
+                    <h1>HS Salon Customers</h1>
+                    <p class="header-subtitle">View and manage all salon customers</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin_dashboard') }}" class="dashboard-btn">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </a>
+                    <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+            <div class="admin-badge">
+                <i class="fas fa-users"></i>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="admin-nav">
+            <div class="nav-container">
+                <ul>
+                    <li><a href="{{ url_for('admin_dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a></li>
+                    <li><a href="{{ url_for('admin_appointments') }}">
+                        <i class="fas fa-calendar-check"></i> Appointments
+                    </a></li>
+                    <li><a href="{{ url_for('admin_customers') }}" class="active">
+                        <i class="fas fa-users"></i> Customers
+                    </a></li>
+                    <li><a href="{{ url_for('admin_settings') }}">
+                        <i class="fas fa-cog"></i> Settings
+                    </a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <div style="padding: 30px;">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-users"></i></div>
+                    <div class="number">{{ customers|length }}</div>
+                    <h3>Total Customers</h3>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-crown"></i></div>
+                    <div class="number">{{ customers|selectattr('points', 'ge', 100)|list|length }}</div>
+                    <h3>Premium Members</h3>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="icon"><i class="fab fa-telegram"></i></div>
+                    <div class="number">{{ customers|selectattr('telegram_id', 'defined')|list|length }}</div>
+                    <h3>Telegram Connected</h3>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-user-plus"></i></div>
+                    <div class="number">{{ customers|selectattr('referred_by', 'defined')|list|length }}</div>
+                    <h3>Via Referral</h3>
+                </div>
+            </div>
+            
+            <!-- Search and Customers Card -->
+            <div class="card">
+                <h2><i class="fas fa-users"></i> All Customers</h2>
+                
+                <!-- Search Box -->
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" class="search-input" 
+                           placeholder="Search customers by name, phone, or telegram ID..." 
+                           onkeyup="filterCustomers()">
+                </div>
+                
+                <!-- Customers Table -->
+                <div style="overflow-x: auto;">
+                    {% if customers %}
+                    <table id="customersTable">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Contact</th>
+                                <th>Points</th>
+                                <th>Referral Code</th>
+                                <th>Registered</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer in customers %}
+                            <tr data-customer-id="{{ customer.id }}">
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        <div class="customer-avatar">
+                                            {{ customer.name[0].upper() }}
+                                        </div>
+                                        <div>
+                                            <strong>{{ customer.name }}</strong><br>
+                                            <span class="customer-id">ID: {{ customer.id }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 500;">{{ customer.phone }}</div>
+                                    {% if customer.telegram_id %}
+                                    <span class="telegram-badge">
+                                        <i class="fab fa-telegram"></i> @{{ customer.telegram_id }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="points-cell">
+                                    <div class="points-value" id="points-{{ customer.id }}">
+                                        {{ customer.points }}
+                                    </div>
+                                    <div class="quick-actions">
+                                        <button class="btn btn-success btn-xs" 
+                                                onclick="quickAdjustPoints({{ customer.id }}, 10)">
+                                            <i class="fas fa-plus"></i> +10
+                                        </button>
+                                        <button class="btn btn-warning btn-xs" 
+                                                onclick="quickAdjustPoints({{ customer.id }}, 25)">
+                                            <i class="fas fa-plus"></i> +25
+                                        </button>
+                                        <button class="btn btn-warning btn-xs" 
+                                                onclick="quickAdjustPoints({{ customer.id }}, -10)">
+                                            <i class="fas fa-minus"></i> -10
+                                        </button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="referral-code">{{ customer.referral_code }}</div>
+                                    {% if customer.referred_by %}
+                                    <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">
+                                        Referred by: {{ customer.referred_by_name or 'Unknown' }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ customer.created_at.strftime('%Y-%m-%d') }}</strong><br>
+                                    <span style="font-size: 12px; color: #6c757d;">
+                                        {{ customer.created_at.strftime('%I:%M %p') }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if customer.points >= 100 %}
+                                    <span class="premium-badge">
+                                        <i class="fas fa-crown"></i> Premium
+                                    </span>
+                                    {% elif customer.points >= 50 %}
+                                    <span class="regular-badge">
+                                        <i class="fas fa-star"></i> Regular
+                                    </span>
+                                    {% else %}
+                                    <span style="color: #6c757d; font-weight: 500;">New</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-primary btn-sm" 
+                                                onclick="openEditPointsModal({{ customer.id }}, '{{ customer.name }}', '{{ customer.phone }}', {{ customer.points }})">
+                                            <i class="fas fa-edit"></i> Edit Points
+                                        </button>
+                                        <button class="btn btn-warning btn-sm" 
+                                                onclick="showResetPasswordModal({{ customer.id }}, '{{ customer.name }}')">
+                                            <i class="fas fa-key"></i> Reset Password
+                                        </button>
+                                        <!-- Add this History button -->
+                                        <a href="{{ url_for('admin_points_history', customer_id=customer.id) }}" 
+                                           class="btn btn-sm" 
+                                           style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white;">
+                                            <i class="fas fa-history"></i> History
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="no-data">
+                        <i class="fas fa-user-friends"></i>
+                        <p>No customers found</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Export Options -->
+                <div class="export-buttons">
+                    <button class="btn" onclick="exportCustomers()">
+                        <i class="fas fa-download"></i> Export Customers List
+                    </button>
+                    <button class="btn btn-success" onclick="showReferralReport()">
+                        <i class="fas fa-chart-bar"></i> Referral Report
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Customer Insights Card -->
+            <div class="card">
+                <h2><i class="fas fa-chart-line"></i> Customer Insights</h2>
+                
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <h4><i class="fas fa-trophy"></i> Top Customers by Points</h4>
+                        <ul class="insight-list">
+                            {% for customer in top_customers %}
+                            <li>
+                                <span>{{ customer.name }}</span>
+                                <span class="points-badge">{{ customer.points }} pts</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <h4><i class="fas fa-user-clock"></i> Recent Registrations</h4>
+                        <ul class="insight-list">
+                            {% for customer in recent_customers %}
+                            <li>
+                                <span>{{ customer.name }}</span>
+                                <span style="font-size: 12px; color: #6c757d;">
+                                    {{ customer.created_at.strftime('%m/%d') }}
+                                </span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <h4><i class="fas fa-chart-pie"></i> Points Distribution</h4>
+                        <ul class="insight-list">
+                            <li>
+                                <span>0-49 points</span>
+                                <span style="font-weight: 600; color: #1a3a7a;">{{ low_points }}</span>
+                            </li>
+                            <li>
+                                <span>50-99 points</span>
+                                <span style="font-weight: 600; color: #1a3a7a;">{{ medium_points }}</span>
+                            </li>
+                            <li>
+                                <span>100+ points</span>
+                                <span style="font-weight: 600; color: #1a3a7a;">{{ high_points }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Points Modal -->
+    <div id="editPointsModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeEditPointsModal()">×</button>
+            <div class="modal-header">
+                <h3><i class="fas fa-coins"></i> Edit Customer Points</h3>
+            </div>
+            <form id="editPointsForm">
+                <div class="modal-body">
+                    <input type="hidden" id="editCustomerId" name="customer_id">
+                    
+                    <div class="form-group">
+                        <label for="editCustomerName">Customer Name</label>
+                        <input type="text" class="form-control" id="editCustomerName" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editCustomerPhone">Phone Number</label>
+                        <input type="text" class="form-control" id="editCustomerPhone" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="currentPoints">Current Points</label>
+                        <input type="text" class="form-control" id="currentPoints" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newPoints">New Points Value</label>
+                        <input type="number" class="form-control" id="newPoints" name="new_points" 
+                               required min="0" step="1" placeholder="Enter new points value">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reason">Reason for Adjustment</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" 
+                                  placeholder="e.g., Extra points for referral bonus, special promotion, customer contribution, etc."></textarea>
+                    </div>
+                    
+                    <div id="editPointsMessage"></div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditPointsModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Points</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Password Reset Modal -->
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeResetPasswordModal()">×</button>
+            <div class="modal-header">
+                <h3><i class="fas fa-key"></i> Reset Customer Password</h3>
+            </div>
+            <div class="modal-body">
+                <p>Resetting password for: <strong id="resetCustomerName" style="color: #2a5298;"></strong></p>
+                
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" class="form-control" id="newPassword" 
+                           placeholder="Enter new password (min 6 characters)">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmNewPassword">Confirm Password</label>
+                    <input type="password" class="form-control" id="confirmNewPassword" 
+                           placeholder="Confirm new password">
+                </div>
+                
+                <div id="resetMessage"></div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeResetPasswordModal()">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="confirmResetPassword()">Reset Password</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Filter customers function
+        function filterCustomers() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById('customersTable');
+            const tr = table.getElementsByTagName('tr');
+            
+            for (let i = 1; i < tr.length; i++) {
+                const td = tr[i].getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 0; j < td.length; j++) {
+                    if (td[j]) {
+                        const txtValue = td[j].textContent || td[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                
+                tr[i].style.display = found ? '' : 'none';
+            }
+        }
+        
+        // Edit Points Modal Functions
+        let currentEditCustomerId = null;
+        
+        function openEditPointsModal(customerId, customerName, customerPhone, currentPoints) {
+            currentEditCustomerId = customerId;
+            
+            document.getElementById('editCustomerId').value = customerId;
+            document.getElementById('editCustomerName').value = customerName;
+            document.getElementById('editCustomerPhone').value = customerPhone;
+            document.getElementById('currentPoints').value = currentPoints;
+            document.getElementById('newPoints').value = currentPoints;
+            document.getElementById('reason').value = '';
+            document.getElementById('editPointsMessage').innerHTML = '';
+            
+            document.getElementById('editPointsModal').style.display = 'block';
+            document.getElementById('newPoints').focus();
+        }
+        
+        function closeEditPointsModal() {
+            document.getElementById('editPointsModal').style.display = 'none';
+            currentEditCustomerId = null;
+        }
+        
+        // Handle edit points form submission
+        document.getElementById('editPointsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const customerId = formData.get('customer_id');
+            const newPoints = formData.get('new_points');
+            const reason = formData.get('reason');
+            
+            const messageDiv = document.getElementById('editPointsMessage');
+            
+            if (newPoints < 0) {
+                messageDiv.innerHTML = '<div class="alert alert-danger">Points cannot be negative</div>';
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to update points to ${newPoints}?`)) {
+                fetch('/admin/update-customer-points', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        messageDiv.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                        
+                        // Update the points value in the table
+                        const pointsElement = document.getElementById(`points-${customerId}`);
+                        if (pointsElement) {
+                            const oldPoints = parseInt(pointsElement.textContent);
+                            pointsElement.textContent = newPoints;
+                            
+                            // Add visual feedback
+                            pointsElement.style.transition = 'all 0.3s';
+                            pointsElement.style.color = '#28a745';
+                            pointsElement.style.fontWeight = 'bold';
+                            
+                            setTimeout(() => {
+                                pointsElement.style.color = '';
+                                pointsElement.style.fontWeight = '';
+                            }, 1000);
+                        }
+                        
+                        // Update customer status badge if needed
+                        updateCustomerStatus(customerId, newPoints);
+                        
+                        // Close modal after delay
+                        setTimeout(() => {
+                            closeEditPointsModal();
+                        }, 1500);
+                    } else {
+                        messageDiv.innerHTML = `<div class="alert alert-danger">Error: ${data.error}</div>`;
+                    }
+                })
+                .catch(error => {
+                    messageDiv.innerHTML = `<div class="alert alert-danger">Network error: ${error}</div>`;
+                });
+            }
+        });
+        
+        // Quick points adjustment
+        function quickAdjustPoints(customerId, adjustment) {
+            const pointsElement = document.getElementById(`points-${customerId}`);
+            if (!pointsElement) return;
+            
+            const currentPoints = parseInt(pointsElement.textContent);
+            let newPoints = currentPoints + adjustment;
+            
+            if (newPoints < 0) {
+                alert('Points cannot be negative');
+                return;
+            }
+            
+            const reason = `Quick adjustment: ${adjustment > 0 ? '+' : ''}${adjustment} points`;
+            
+            if (confirm(`Adjust points from ${currentPoints} to ${newPoints}?`)) {
+                const formData = new FormData();
+                formData.append('customer_id', customerId);
+                formData.append('new_points', newPoints);
+                formData.append('reason', reason);
+                
+                fetch('/admin/update-customer-points', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        
+                        // Update points display
+                        pointsElement.textContent = newPoints;
+                        
+                        // Visual feedback
+                        pointsElement.style.transition = 'all 0.3s';
+                        if (adjustment > 0) {
+                            pointsElement.style.color = '#28a745';
+                            pointsElement.style.transform = 'scale(1.1)';
+                        } else {
+                            pointsElement.style.color = '#dc3545';
+                            pointsElement.style.transform = 'scale(1.1)';
+                        }
+                        
+                        setTimeout(() => {
+                            pointsElement.style.color = '';
+                            pointsElement.style.transform = '';
+                        }, 500);
+                        
+                        // Update customer status
+                        updateCustomerStatus(customerId, newPoints);
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Network error: ' + error);
+                });
+            }
+        }
+        
+        // Update customer status badge
+        function updateCustomerStatus(customerId, newPoints) {
+            const row = document.querySelector(`tr[data-customer-id="${customerId}"]`);
+            if (!row) return;
+            
+            const statusCell = row.cells[5]; // Status column
+            if (!statusCell) return;
+            
+            let badgeHTML = '';
+            
+            if (newPoints >= 100) {
+                badgeHTML = '<span class="premium-badge"><i class="fas fa-crown"></i> Premium</span>';
+            } else if (newPoints >= 50) {
+                badgeHTML = '<span class="regular-badge"><i class="fas fa-star"></i> Regular</span>';
+            } else {
+                badgeHTML = '<span style="color: #6c757d; font-weight: 500;">New</span>';
+            }
+            
+            statusCell.innerHTML = badgeHTML;
+        }
+        
+        // Password Reset Functions
+        let currentCustomerId = null;
+        let currentCustomerName = null;
+        
+        function showResetPasswordModal(customerId, customerName) {
+            currentCustomerId = customerId;
+            currentCustomerName = customerName;
+            
+            document.getElementById('resetCustomerName').textContent = customerName;
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+            document.getElementById('resetMessage').innerHTML = '';
+            
+            document.getElementById('resetPasswordModal').style.display = 'block';
+        }
+        
+        function closeResetPasswordModal() {
+            document.getElementById('resetPasswordModal').style.display = 'none';
+            currentCustomerId = null;
+            currentCustomerName = null;
+        }
+        
+        function confirmResetPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmNewPassword').value;
+            const messageDiv = document.getElementById('resetMessage');
+            
+            if (newPassword.length < 6) {
+                messageDiv.innerHTML = '<div class="alert alert-danger">Password must be at least 6 characters</div>';
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                messageDiv.innerHTML = '<div class="alert alert-danger">Passwords do not match</div>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('customer_id', currentCustomerId);
+            formData.append('new_password', newPassword);
+            
+            fetch('/admin/reset-customer-password', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    messageDiv.innerHTML = '<div class="alert alert-success">' + data.message + '</div>';
+                    setTimeout(() => {
+                        closeResetPasswordModal();
+                        alert('Password reset successfully!');
+                    }, 1500);
+                } else {
+                    messageDiv.innerHTML = '<div class="alert alert-danger">Error: ' + data.error + '</div>';
+                }
+            })
+            .catch(error => {
+                messageDiv.innerHTML = '<div class="alert alert-danger">Network error. Please try again.</div>';
+                console.error(error);
+            });
+        }
+        
+        // Export functions
+        function exportCustomers() {
+            alert('Export functionality would be implemented here. This would generate a CSV file with all customer data.');
+            // In a real implementation, this would make an API call to export data
+        }
+        
+        function showReferralReport() {
+            alert('Referral report would show detailed statistics about referral performance.');
+            // In a real implementation, this would show a modal with referral analytics
+        }
+        
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const editModal = document.getElementById('editPointsModal');
+            const resetModal = document.getElementById('resetPasswordModal');
+            
+            if (event.target == editModal) {
+                closeEditPointsModal();
+            }
+            if (event.target == resetModal) {
+                closeResetPasswordModal();
+            }
+        }
+        
+        // Close modals with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeEditPointsModal();
+                closeResetPasswordModal();
+            }
+        });
+    </script>
+
+</body>
+</html>
