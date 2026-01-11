@@ -211,6 +211,20 @@
             background: linear-gradient(135deg, #1e7e34 0%, #145523 100%);
         }
         
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+        }
+        
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 13px;
+            width: auto;
+        }
+        
         .btn-telegram {
             background: linear-gradient(135deg, #0088cc 0%, #006699 100%);
         }
@@ -616,6 +630,116 @@
             color: #856404;
         }
         
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        
+        .modal-title {
+            margin-bottom: 15px;
+            color: #1a3a7a;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .modal-message {
+            margin-bottom: 20px;
+            color: #495057;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+        
+        .warning-box i {
+            color: #856404;
+            margin-right: 8px;
+        }
+        
+        /* Appointment Actions */
+        .appointment-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .appointment-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        
+        /* Cancellation Info */
+        .cancellation-info {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 8px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #dc3545;
+        }
+        
+        /* Notification Styles */
+        .custom-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 320px;
+            max-width: 400px;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border-left: 4px solid;
+            background: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            animation: notificationSlideIn 0.3s ease;
+        }
+        
+        @keyframes notificationSlideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
         /* Responsive Design */
         @media (max-width: 768px) {
             .container {
@@ -676,6 +800,14 @@
                 margin-top: 10px;
                 display: inline-block;
             }
+            
+            .appointment-actions {
+                flex-direction: column;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
+            }
         }
         
         @media (max-width: 480px) {
@@ -704,7 +836,7 @@
                     <p class="header-subtitle">Manage your appointments and rewards</p>
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-                    <div class="points-badge">
+                    <div class="points-badge" id="pointsBadge">
                         <i class="fas fa-coins"></i>
                         {{ customer.points }} Points
                     </div>
@@ -887,10 +1019,10 @@
                     <h2><i class="fas fa-history"></i> Recent Appointments</h2>
                     
                     {% if appointments %}
-                    <ul class="appointments-list">
+                    <ul class="appointments-list" id="appointmentsList">
                         {% for appointment in appointments %}
-                        <li class="appointment-item">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <li class="appointment-item" id="appointment-{{ appointment.id }}">
+                            <div class="appointment-details">
                                 <div>
                                     <strong style="color: #1a3a7a; font-size: 16px;">{{ appointment.service_type }}</strong>
                                 </div>
@@ -906,6 +1038,28 @@
                             <span class="status-badge status-{{ appointment.status }}">
                                 {{ appointment.status|title }}
                             </span>
+                            
+                            {% if appointment.cancelled_at %}
+                            <div class="cancellation-info">
+                                <i class="fas fa-times"></i>
+                                Cancelled: {{ appointment.cancelled_at.strftime('%Y-%m-%d %I:%M %p') }}
+                                {% if appointment.cancellation_reason %}
+                                <br>Reason: {{ appointment.cancellation_reason }}
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div class="appointment-actions">
+                                {% if appointment.status in ['pending', 'confirmed'] %}
+                                <button class="btn btn-danger btn-sm cancel-appointment-btn"
+                                        data-appointment-id="{{ appointment.id }}"
+                                        data-service="{{ appointment.service_type }}"
+                                        data-datetime="{{ appointment.appointment_time.isoformat() }}"
+                                        onclick="openCancelModal('{{ appointment.id }}', '{{ appointment.service_type }}', '{{ appointment.appointment_time.isoformat() }}')">
+                                    <i class="fas fa-times"></i> Cancel Appointment
+                                </button>
+                                {% endif %}
+                            </div>
                         </li>
                         {% endfor %}
                     </ul>
@@ -924,7 +1078,7 @@
                 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px;">
                     <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-                        <div style="font-size: 24px; font-weight: 800; color: #1a3a7a; margin-bottom: 5px;">
+                        <div style="font-size: 24px; font-weight: 800; color: #1a3a7a; margin-bottom: 5px;" id="currentPoints">
                             {{ customer.points }}
                         </div>
                         <div style="font-size: 14px; color: #6c757d; font-weight: 600;">
@@ -974,9 +1128,41 @@
         </div>
     </div>
     
+    <!-- Cancel Appointment Modal -->
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">
+                <i class="fas fa-exclamation-triangle"></i> Cancel Appointment
+            </h3>
+            <div class="modal-message" id="modalMessage">
+                <!-- Message will be inserted here -->
+            </div>
+            
+            <div id="timeWarningBox" class="warning-box" style="display: none;">
+                <i class="fas fa-clock"></i>
+                <strong>⚠️ Late Cancellation Fee</strong>
+                <p style="margin: 5px 0 0 0; font-size: 14px;">
+                    You're cancelling within 2 hours of your appointment time. 
+                    <strong>5 points will be deducted</strong> (only 5 points refunded out of 10).
+                </p>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-danger" onclick="confirmCancellation()">
+                    <i class="fas fa-times"></i> Cancel Appointment
+                </button>
+                <button class="btn" onclick="closeCancelModal()" style="background: #6c757d;">
+                    <i class="fas fa-times"></i> Keep Appointment
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         let selectedDate = null;
         let selectedTime = null;
+        let appointmentToCancel = null;
+        let appointmentCancelTime = null;
         
         // Update current time display
         function updateCurrentTime() {
@@ -1206,9 +1392,13 @@
             fetch('/api/check-points')
                 .then(response => response.json())
                 .then(data => {
-                    const pointsBadge = document.querySelector('.points-badge');
+                    const pointsBadge = document.getElementById('pointsBadge');
+                    const currentPoints = document.getElementById('currentPoints');
                     if (pointsBadge) {
                         pointsBadge.innerHTML = `<i class="fas fa-coins"></i> ${data.points} Points`;
+                    }
+                    if (currentPoints) {
+                        currentPoints.textContent = data.points;
                     }
                 });
         }
@@ -1245,6 +1435,194 @@
                 }
             });
         });
+        
+        // Cancel Appointment Functions
+        function openCancelModal(appointmentId, service, appointmentTimeStr) {
+            appointmentToCancel = appointmentId;
+            appointmentCancelTime = new Date(appointmentTimeStr);
+            const now = new Date();
+            const hoursUntilAppointment = (appointmentCancelTime - now) / (1000 * 60 * 60);
+            
+            const timeString = appointmentCancelTime.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const dateString = appointmentCancelTime.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            let message = `<p>Are you sure you want to cancel your appointment?</p>
+                          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                              <p><strong>Service:</strong> ${service}</p>
+                              <p><strong>Date:</strong> ${dateString}</p>
+                              <p><strong>Time:</strong> ${timeString}</p>
+                          </div>`;
+            
+            const warningBox = document.getElementById('timeWarningBox');
+            
+            if (hoursUntilAppointment < 2) {
+                // Within 2 hours - deduct 5 points
+                message += `<p style="margin-top: 15px; font-weight: 600; color: #dc3545;">
+                    <i class="fas fa-exclamation-triangle"></i> You're cancelling within 2 hours of your appointment.</p>`;
+                warningBox.style.display = 'block';
+            } else {
+                // More than 2 hours before - full refund
+                message += `<p style="margin-top: 15px; font-weight: 600; color: #28a745;">
+                    <i class="fas fa-check-circle"></i> You're cancelling more than 2 hours before your appointment. 10 points will be refunded.</p>`;
+                warningBox.style.display = 'none';
+            }
+            
+            document.getElementById('modalMessage').innerHTML = message;
+            document.getElementById('cancelModal').style.display = 'flex';
+        }
+        
+        function closeCancelModal() {
+            document.getElementById('cancelModal').style.display = 'none';
+            appointmentToCancel = null;
+            appointmentCancelTime = null;
+            document.getElementById('timeWarningBox').style.display = 'none';
+        }
+        
+        function confirmCancellation() {
+            if (!appointmentToCancel) return;
+            
+            const cancelBtn = document.querySelector('.modal-buttons .btn-danger');
+            const originalText = cancelBtn.innerHTML;
+            
+            // Show loading
+            cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+            cancelBtn.disabled = true;
+            
+            fetch('/cancel-appointment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    appointment_id: appointmentToCancel
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    
+                    // Close modal
+                    closeCancelModal();
+                    
+                    // Update points display
+                    const pointsBadge = document.getElementById('pointsBadge');
+                    const currentPoints = document.getElementById('currentPoints');
+                    if (pointsBadge) {
+                        pointsBadge.innerHTML = `<i class="fas fa-coins"></i> ${data.new_points} Points`;
+                    }
+                    if (currentPoints) {
+                        currentPoints.textContent = data.new_points;
+                    }
+                    
+                    // Find and update the appointment in the list
+                    const appointmentItem = document.getElementById(`appointment-${appointmentToCancel}`);
+                    if (appointmentItem) {
+                        // Update status
+                        const statusBadge = appointmentItem.querySelector('.status-badge');
+                        if (statusBadge) {
+                            statusBadge.className = 'status-badge status-cancelled';
+                            statusBadge.textContent = 'Cancelled';
+                        }
+                        
+                        // Add cancellation info
+                        const now = new Date();
+                        const cancellationInfo = document.createElement('div');
+                        cancellationInfo.className = 'cancellation-info';
+                        cancellationInfo.innerHTML = `
+                            <i class="fas fa-times"></i>
+                            Cancelled: ${now.toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
+                            <br>Refunded: ${data.points_refunded} points
+                        `;
+                        
+                        // Remove actions and add cancellation info
+                        const actions = appointmentItem.querySelector('.appointment-actions');
+                        if (actions) {
+                            actions.remove();
+                        }
+                        
+                        // Add cancellation info before the appointment details
+                        const details = appointmentItem.querySelector('.appointment-details');
+                        if (details) {
+                            appointmentItem.insertBefore(cancellationInfo, details.nextSibling);
+                        }
+                    }
+                } else {
+                    showNotification(data.error, 'error');
+                    cancelBtn.innerHTML = originalText;
+                    cancelBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                showNotification('Network error: ' + error, 'error');
+                cancelBtn.innerHTML = originalText;
+                cancelBtn.disabled = false;
+            });
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('cancelModal');
+            if (event.target == modal) {
+                closeCancelModal();
+            }
+        }
+        
+        // Notification function
+        function showNotification(message, type = 'success') {
+            // Remove any existing notifications
+            document.querySelectorAll('.custom-notification').forEach(el => el.remove());
+            
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = `custom-notification ${type}`;
+            
+            // Set icon based on type
+            const icon = type === 'success' ? '✓' : '✗';
+            const title = type === 'success' ? 'Success!' : 'Error!';
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <div style="font-size: 20px; margin-top: 2px;">${icon}</div>
+                    <div style="flex: 1;">
+                        <strong style="display: block; margin-bottom: 4px;">${title}</strong>
+                        <div style="font-size: 14px;">${message}</div>
+                    </div>
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" 
+                            style="background: none; border: none; font-size: 16px; cursor: pointer; color: #666; padding: 0; margin: 0;">
+                        ×
+                    </button>
+                </div>
+            `;
+            
+            // Apply styles
+            notification.style.borderLeftColor = type === 'success' ? '#28a745' : '#dc3545';
+            notification.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
+            notification.style.color = type === 'success' ? '#155724' : '#721c24';
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
     </script>
 </body>
 </html>

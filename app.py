@@ -1,6 +1,6 @@
 # app.py
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 from datetime import datetime, timedelta, date
 from collections import defaultdict
 import requests
@@ -57,7 +57,6 @@ with app.app_context():
     if salon_settings and salon_settings.telegram_bot_token:
         print("🔗 Attempting to set Telegram webhook...")
         
-        # You might want to use ngrok URL here for local development
         webhook_url = f"https://hairsalon-1560.onrender.com/telegram-webhook"
         
         try:
@@ -76,13 +75,15 @@ with app.app_context():
 def serve_static(filename):
     return send_from_directory('static', filename)
 
-# Routes
+# =========================
+# ROUTES
+# =========================
+
 @app.route('/')
 def index():
     """Home page"""
     referral_code = request.args.get('ref', '')
     
-    # Debug: Check what value we're passing
     print(f"DEBUG: TELEGRAM_BOT_LINK = {app.config['TELEGRAM_BOT_LINK']}")
     
     return render_template('index.html', 
@@ -103,12 +104,10 @@ def customer_login():
     
     phone_normalized = normalize_phone_number(phone)
     
-    # Try multiple formats if first doesn't work
     customer = Customer.query.filter_by(phone=phone_normalized).first()
     
     # If not found, try alternative formats
     if not customer:
-        # Try without +60 but with +6 (old format)
         if phone_normalized.startswith('+60'):
             phone_alt = '+6' + phone_normalized[3:]  # +60123456789 -> +6123456789
             customer = Customer.query.filter_by(phone=phone_alt).first()
@@ -140,7 +139,6 @@ def register():
     
     print(f"DEBUG REGISTER: Raw phone input: '{phone}'")
     
-    # Validate phone is provided
     if not phone:
         flash('Phone number is required', 'error')
         return redirect(url_for('index'))
@@ -149,23 +147,18 @@ def register():
     
     print(f"DEBUG REGISTER: Normalized phone: '{phone_normalized}'")
     
-    # Validate normalization worked
     if not phone_normalized:
         flash('Invalid phone number format. Please enter a valid Malaysian phone number (e.g., 012-3456789 or 0123456789)', 'error')
         return redirect(url_for('index'))
     
-    # Check existing customer with normalized phone
     existing = Customer.query.filter_by(phone=phone_normalized).first()
     
-    # If not found, try alternative formats for backward compatibility
     if not existing:
-        # Try old +6 format (without 0)
         if phone_normalized.startswith('+60'):
             phone_alt = '+6' + phone_normalized[3:]  # +60123456789 -> +6123456789
             print(f"DEBUG REGISTER: Trying alt format 1: {phone_alt}")
             existing = Customer.query.filter_by(phone=phone_alt).first()
         
-        # Try without + (just digits)
         if not existing:
             phone_alt = phone_normalized[1:] if phone_normalized.startswith('+') else phone_normalized
             print(f"DEBUG REGISTER: Trying alt format 2: {phone_alt}")
@@ -178,16 +171,13 @@ def register():
         flash(f'Welcome back {existing.name}! Please login with your password.', 'info')
         return redirect(url_for('login_page'))
     
-    # Create new customer
     customer_referral_code = generate_referral_code()
     password_hash = str(hash(password))
     
-    # Clean telegram username
     if telegram and telegram.startswith('@'):
         telegram = telegram[1:]
     telegram = telegram.strip() if telegram else None
     
-    # Check referrer
     referrer = None
     if referral_code:
         referrer = Customer.query.filter_by(referral_code=referral_code).first()
@@ -205,7 +195,6 @@ def register():
     db.session.add(customer)
     db.session.commit()
     
-    # Create referral record
     if referrer:
         referral = Referral(
             referrer_id=referrer.id,
@@ -220,7 +209,6 @@ def register():
             send_telegram_to_customer(referrer, 
                 f"🎉 New referral! {name} registered using your link.")
     
-    # Notify admin
     salon_settings = SalonSettings.query.first()
     if salon_settings.telegram_chat_id:
         admin_message = f"👤 New Customer Registered!\n\nName: {name}\nPhone: {phone_normalized}\n"
@@ -236,7 +224,6 @@ def register():
     flash(f'Welcome {name}! You got 10 points.', 'success')
     return redirect(url_for('dashboard'))
 
-# Customer password reset request
 @app.route('/forgot-password')
 def forgot_password_page():
     """Forgot password page"""
@@ -250,9 +237,7 @@ def request_password_reset():
     
     customer = Customer.query.filter_by(phone=phone_normalized).first()
     
-    # If not found, try alternative formats
     if not customer:
-        # Try without +60 but with +6 (old format)
         if phone_normalized.startswith('+60'):
             phone_alt = '+6' + phone_normalized[3:]  # +60123456789 -> +6123456789
             customer = Customer.query.filter_by(phone=phone_alt).first()
@@ -261,16 +246,13 @@ def request_password_reset():
         flash('Phone number not found.', 'error')
         return redirect(url_for('forgot_password_page'))
     
-    # Generate reset token (simple random string)
     import secrets
     reset_token = secrets.token_urlsafe(32)
     
     customer.reset_token = reset_token
-    customer.reset_token_expiry = datetime.utcnow() + timedelta(hours=24)  # 24 hours expiry
+    customer.reset_token_expiry = datetime.utcnow() + timedelta(hours=24)
     db.session.commit()
     
-    # In a real app, send this token via SMS or email
-    # For demo, we'll show it (in production, send via secure channel)
     flash(f'Password reset token: {reset_token}. Please contact admin if you need help.', 'info')
     
     return redirect(url_for('reset_password_page', token=reset_token))
@@ -306,7 +288,6 @@ def reset_password():
         flash('Reset token has expired', 'error')
         return redirect(url_for('forgot_password_page'))
     
-    # Update password
     customer.password_hash = str(hash(new_password))
     customer.reset_token = None
     customer.reset_token_expiry = None
@@ -315,7 +296,6 @@ def reset_password():
     flash('Password reset successfully! You can now login with your new password.', 'success')
     return redirect(url_for('login_page'))
 
-# Admin reset customer password
 @app.route('/admin/reset-customer-password', methods=['POST'])
 def admin_reset_customer_password():
     """Admin reset customer password"""
@@ -332,13 +312,11 @@ def admin_reset_customer_password():
     if not customer:
         return jsonify({'success': False, 'error': 'Customer not found'})
     
-    # Update password
     customer.password_hash = str(hash(new_password))
     customer.reset_token = None
     customer.reset_token_expiry = None
     db.session.commit()
     
-    # Log the action
     print(f"Admin reset password for customer: {customer.name} (ID: {customer.id})")
     
     return jsonify({'success': True, 'message': f'Password reset for {customer.name}'})
@@ -359,11 +337,9 @@ def dashboard():
     salon_settings = SalonSettings.query.first()
     max_appointments = salon_settings.max_daily_appointments
     
-    # Get calendar days - start from today
     today = date.today()
     calendar_days = []
     
-    # Generate 35 days (5 weeks) for a full calendar view
     for i in range(35):
         day_date = today + timedelta(days=i)
         color, status, count = get_date_color(day_date)
@@ -372,21 +348,19 @@ def dashboard():
             'day': day_date.day,
             'month': day_date.month,
             'year': day_date.year,
-            'day_name': day_date.strftime('%a'),  # Mon, Tue, Wed, etc.
-            'day_num': day_date.weekday(),  # 0=Monday, 6=Sunday
+            'day_name': day_date.strftime('%a'),
+            'day_num': day_date.weekday(),
             'color': color,
             'status': status,
             'count': count,
             'max': max_appointments,
             'available': count < max_appointments,
             'is_today': day_date == today,
-            'is_past': False  # We're only showing future dates
+            'is_past': False
         })
     
-    # Get services
     services = ['Haircut', 'Coloring', 'Hair Treatment', 'Styling', 'Perm']
     
-    # Get referral stats
     successful_referrals = Referral.query.filter_by(
         referrer_id=customer.id,
         status='completed'
@@ -399,7 +373,6 @@ def dashboard():
     
     referral_url = f"{request.host_url}?ref={customer.referral_code}"
     
-    # Get appointments
     customer_appointments = Appointment.query.filter_by(
         customer_id=customer.id
     ).order_by(Appointment.appointment_time.desc()).all()
@@ -424,7 +397,6 @@ def api_time_slots():
     except:
         return jsonify({'error': 'Invalid date'})
     
-    # Debug: Check salon settings
     salon_settings = SalonSettings.query.first()
     if salon_settings:
         print(f"DEBUG: Working hours - Start: {salon_settings.working_hours_start}, End: {salon_settings.working_hours_end}")
@@ -496,7 +468,6 @@ def book_appointment():
     if appointment_count >= salon_settings.max_daily_appointments:
         return jsonify({'success': False, 'error': 'Date is fully booked'})
     
-    # Create appointment
     customer.points -= 10
     
     appointment = Appointment(
@@ -514,13 +485,182 @@ def book_appointment():
     
     session['customer_points'] = customer.points
     
-    # Send Telegram confirmation
     send_appointment_confirmation(customer, appointment)
     
     return jsonify({'success': True, 'message': 'Appointment booked!'})
 
-# Add other routes here (admin, complete-appointment, logout, etc.)
+# =========================
+# APPOINTMENT CANCELLATION ROUTES
+# =========================
 
+@app.route('/cancel-appointment', methods=['POST'])
+def cancel_appointment():
+    """Customer cancel appointment"""
+    if 'customer_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'})
+    
+    customer_id = session['customer_id']
+    customer = db.session.get(Customer, customer_id)
+    
+    if not customer:
+        return jsonify({'success': False, 'error': 'Customer not found'})
+    
+    try:
+        data = request.get_json()
+        appointment_id = data.get('appointment_id')
+    except:
+        return jsonify({'success': False, 'error': 'Invalid request'})
+    
+    appointment = db.session.get(Appointment, appointment_id)
+    
+    if not appointment:
+        return jsonify({'success': False, 'error': 'Appointment not found'})
+    
+    if appointment.customer_id != customer.id:
+        return jsonify({'success': False, 'error': 'Not authorized'})
+    
+    if appointment.status not in ['pending', 'confirmed']:
+        return jsonify({'success': False, 'error': 'Appointment cannot be cancelled'})
+    
+    try:
+        current_time = datetime.utcnow()
+        appointment_time = appointment.appointment_time
+        time_diff = (appointment_time - current_time).total_seconds() / 3600  # hours
+        
+        # Determine points refund based on cancellation time
+        if time_diff < 2:
+            # Within 2 hours - deduct 5 points (refund 5 points)
+            points_to_refund = 5
+            message = "Appointment cancelled within 2 hours. 5 points deducted (only 5 points refunded)."
+        else:
+            # More than 2 hours before - full refund
+            points_to_refund = 10
+            message = "Appointment cancelled. 10 points refunded."
+        
+        old_points = customer.points
+        
+        customer.points += points_to_refund
+        
+        appointment.status = 'cancelled'
+        appointment.cancelled_at = current_time
+        
+        points_history = PointsHistory(
+            customer_id=customer.id,
+            old_points=old_points,
+            new_points=customer.points,
+            difference=points_to_refund,
+            reason=f'Appointment cancellation refund: {appointment.service_type}',
+            changed_by='system'
+        )
+        db.session.add(points_history)
+        
+        db.session.commit()
+        
+        session['customer_points'] = customer.points
+        
+        if customer.telegram_id:
+            telegram_message = f"❌ Appointment Cancelled\n\n"
+            telegram_message += f"Service: {appointment.service_type}\n"
+            telegram_message += f"Date: {appointment.appointment_time.strftime('%Y-%m-%d')}\n"
+            telegram_message += f"Time: {appointment.appointment_time.strftime('%I:%M %p')}\n"
+            telegram_message += f"Refunded: {points_to_refund} points\n"
+            telegram_message += f"New points balance: {customer.points}"
+            send_telegram_to_customer(customer, telegram_message)
+        
+        salon_settings = SalonSettings.query.first()
+        if salon_settings and salon_settings.telegram_chat_id:
+            admin_message = f"❌ Appointment Cancelled\n\n"
+            admin_message += f"Customer: {customer.name}\n"
+            admin_message += f"Phone: {customer.phone}\n"
+            admin_message += f"Service: {appointment.service_type}\n"
+            admin_message += f"Time: {appointment.appointment_time.strftime('%Y-%m-%d %I:%M %p')}\n"
+            admin_message += f"Cancelled at: {current_time.strftime('%Y-%m-%d %I:%M %p')}\n"
+            admin_message += f"Hours before appointment: {time_diff:.1f}h\n"
+            admin_message += f"Points refunded: {points_to_refund}"
+            send_telegram_message(salon_settings.telegram_chat_id, admin_message)
+        
+        return jsonify({
+            'success': True, 
+            'message': message,
+            'points_refunded': points_to_refund,
+            'new_points': customer.points
+        })
+        
+    except Exception as e:
+        print(f"Error cancelling appointment: {e}")
+        db.session.rollback()
+        return jsonify({
+            'success': False, 
+            'error': f'Error: {str(e)}'
+        })
+
+@app.route('/admin/cancel-appointment', methods=['POST'])
+def admin_cancel_appointment():
+    """Admin cancel appointment"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'success': False, 'error': 'Unauthorized'})
+    
+    appointment_id = request.form.get('appointment_id')
+    reason = request.form.get('reason', '').strip()
+    
+    appointment = db.session.get(Appointment, appointment_id)
+    
+    if not appointment:
+        return jsonify({'success': False, 'error': 'Appointment not found'})
+    
+    customer = db.session.get(Customer, appointment.customer_id)
+    if not customer:
+        return jsonify({'success': False, 'error': 'Customer not found'})
+    
+    try:
+        old_points = customer.points
+        points_to_refund = 10
+        
+        customer.points += points_to_refund
+        
+        appointment.status = 'cancelled'
+        appointment.cancelled_at = datetime.utcnow()
+        appointment.admin_cancelled = True
+        appointment.cancellation_reason = reason if reason else 'Cancelled by admin'
+        
+        points_history = PointsHistory(
+            customer_id=customer.id,
+            old_points=old_points,
+            new_points=customer.points,
+            difference=points_to_refund,
+            reason=f'Admin appointment cancellation: {appointment.service_type}' + 
+                  (f' - {reason}' if reason else ''),
+            changed_by='admin'
+        )
+        db.session.add(points_history)
+        
+        db.session.commit()
+        
+        if customer.telegram_id:
+            telegram_message = f"❌ Appointment Cancelled by Admin\n\n"
+            telegram_message += f"Service: {appointment.service_type}\n"
+            telegram_message += f"Date: {appointment.appointment_time.strftime('%Y-%m-%d')}\n"
+            telegram_message += f"Time: {appointment.appointment_time.strftime('%I:%M %p')}\n"
+            telegram_message += f"Refunded: {points_to_refund} points\n"
+            if reason:
+                telegram_message += f"Reason: {reason}\n"
+            telegram_message += f"New points balance: {customer.points}"
+            send_telegram_to_customer(customer, telegram_message)
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Appointment cancelled. Refunded {points_to_refund} points to {customer.name}',
+            'customer_name': customer.name,
+            'appointment_id': appointment_id
+        })
+        
+    except Exception as e:
+        print(f"Error cancelling appointment: {e}")
+        db.session.rollback()
+        return jsonify({
+            'success': False, 
+            'error': f'Error: {str(e)}'
+        })
 
 @app.route('/complete-appointment', methods=['POST'])
 def complete_appointment():
@@ -539,16 +679,11 @@ def complete_appointment():
         return jsonify({'success': False, 'error': 'Customer not found'})
     
     try:
-        # Store old points before update
         old_points = customer.points
         
-        # Update appointment status
         appointment.status = 'completed'
+        customer.points += 20
         
-        # Award points to customer
-        customer.points += 20  # Award 20 points for completed appointment
-        
-        # Log points history for the 20 points awarded
         points_history = PointsHistory(
             customer_id=customer.id,
             old_points=old_points,
@@ -561,11 +696,9 @@ def complete_appointment():
         
         db.session.commit()
         
-        # Award referral points if applicable
         referral_awarded = award_referral_points(customer.id)
         
         if referral_awarded:
-            # Log referral points separately if needed
             referral_points_history = PointsHistory(
                 customer_id=customer.referred_by,
                 old_points=Customer.query.get(customer.referred_by).points - 10,
@@ -578,12 +711,10 @@ def complete_appointment():
         
         db.session.commit()
         
-        # Send notification to customer
         if customer.telegram_id:
             message = f"✅ Your appointment for {appointment.service_type} has been completed! You've earned 20 points."
             send_telegram_to_customer(customer, message)
         
-        # Success message
         success_msg = f"Appointment completed for {customer.name}! Awarded 20 points."
         if referral_awarded:
             success_msg += " Referral bonus awarded!"
@@ -614,7 +745,6 @@ def admin_login():
     username = request.form.get('username', '').strip()
     password = request.form.get('password', '').strip()
     
-    # Temporary hardcoded credentials
     ADMIN_USERNAME = 'admin'
     ADMIN_PASSWORD = 'admin123'
     
@@ -633,7 +763,6 @@ def admin_dashboard():
     
     salon_settings = SalonSettings.query.first()
     
-    # Get statistics
     total_customers = Customer.query.count()
     total_appointments = Appointment.query.count()
     pending_appointments = Appointment.query.filter_by(status='pending').count()
@@ -641,17 +770,15 @@ def admin_dashboard():
         db.func.date(Appointment.appointment_time) == date.today()
     ).count()
     
-    # Get recent appointments WITH customer data
     recent_appointments = Appointment.query.options(
-        db.joinedload(Appointment.customer)  # Eager load customer
+        db.joinedload(Appointment.customer)
     ).order_by(
         Appointment.appointment_time.desc()
     ).limit(10).all()
     
-    # Get upcoming appointments for today WITH customer data
     today = date.today()
     upcoming_today = Appointment.query.options(
-        db.joinedload(Appointment.customer)  # Eager load customer
+        db.joinedload(Appointment.customer)
     ).filter(
         db.func.date(Appointment.appointment_time) == today,
         Appointment.status.in_(['pending', 'confirmed'])
@@ -684,15 +811,6 @@ def admin_settings():
         salon_settings.telegram_chat_id = request.form.get('telegram_chat_id', '').strip()
         salon_settings.telegram_bot_token = request.form.get('telegram_bot_token', '').strip()
         
-        # Remove these lines temporarily:
-        # new_username = request.form.get('admin_username', '').strip()
-        # new_password = request.form.get('admin_password', '').strip()
-        
-        # if new_username:
-        #     salon_settings.admin_username = new_username
-        # if new_password:
-        #     salon_settings.admin_password = new_password
-        
         db.session.commit()
         flash('Settings updated successfully!', 'success')
         return redirect(url_for('admin_settings'))
@@ -705,7 +823,6 @@ def admin_appointments():
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login_page'))
     
-    # Get filter parameters
     status_filter = request.args.get('status', 'all')
     date_filter = request.args.get('date', '')
     
@@ -737,11 +854,9 @@ def admin_customers():
     
     customers = Customer.query.order_by(Customer.created_at.desc()).all()
     
-    # Prepare additional data
-    recent_customers = customers[:5]  # Already sorted by created_at desc
+    recent_customers = customers[:5]
     top_customers = sorted(customers, key=lambda c: c.points, reverse=True)[:5]
     
-    # Calculate points distribution
     low_points = len([c for c in customers if c.points <= 49])
     medium_points = len([c for c in customers if 50 <= c.points <= 99])
     high_points = len([c for c in customers if c.points >= 100])
@@ -774,19 +889,15 @@ def telegram_webhook():
         data = request.get_json()
         print(f"Telegram webhook received: {json.dumps(data, indent=2)}")
         
-        # Process Telegram updates
         if 'message' in data:
             message = data['message']
             chat_id = message['chat']['id']
             text = message.get('text', '').strip()
             
-            # Check if it's a private chat
             if message['chat']['type'] == 'private':
-                # Check if this chat is already registered
                 telegram_chat = TelegramChat.query.filter_by(chat_id=str(chat_id)).first()
                 
                 if not telegram_chat:
-                    # Register new chat
                     first_name = message['chat'].get('first_name', '')
                     last_name = message['chat'].get('last_name', '')
                     username = message['chat'].get('username', '')
@@ -801,7 +912,6 @@ def telegram_webhook():
                     db.session.add(telegram_chat)
                     db.session.commit()
                     
-                    # Update admin chat ID if not set
                     salon_settings = SalonSettings.query.first()
                     if salon_settings and not salon_settings.telegram_chat_id:
                         salon_settings.telegram_chat_id = str(chat_id)
@@ -812,11 +922,9 @@ def telegram_webhook():
                     
                     send_telegram_message(chat_id, welcome_msg)
                 
-                # Handle /start command
                 if text == '/start':
                     first_name = message['chat'].get('first_name', 'there')
                     
-                    # Send welcome message directly
                     welcome_message = f"""👋 Hello {first_name}!
 
 Welcome to *HS Salon Bot* 🤖
@@ -837,27 +945,14 @@ Happy styling! ✂️"""
                     
                     send_telegram_message(chat_id, welcome_message)
                     
-                    # Check if this Telegram username matches any customer
                     username = message['chat'].get('username', '')
                     if username:
                         customer = Customer.query.filter_by(telegram_id=username).first()
                         if customer:
-                            # Link this chat ID to customer for direct messaging
-                            customer.telegram_chat_id = str(chat_id)
-                            db.session.commit()
-                            send_telegram_message(chat_id, f"✅ Your Telegram is now linked to your account: {customer.name}")
-                    
-                    # Check if this Telegram username matches any customer
-                    username = message['chat'].get('username', '')
-                    if username:
-                        customer = Customer.query.filter_by(telegram_id=username).first()
-                        if customer:
-                            # Link this chat ID to customer for direct messaging
                             customer.telegram_chat_id = str(chat_id)
                             db.session.commit()
                             send_telegram_message(chat_id, f"✅ Your Telegram is now linked to your account: {customer.name}")
                 
-                # Handle /help command
                 elif text == '/help':
                     help_message = """🤖 <b>HS Salon Bot Commands</b>
 
@@ -873,25 +968,20 @@ You'll automatically receive:
 • Referral notifications"""
                     send_telegram_message(chat_id, help_message)
                 
-                # In the telegram_webhook function, find the /link handler:
                 elif text.startswith('/link'):
                     parts = text.split()
                     if len(parts) > 1:
                         phone = parts[1]
                         phone_normalized = normalize_phone_number(phone)
         
-                        # Try multiple formats
                         customer = Customer.query.filter_by(phone=phone_normalized).first()
         
-                        # If not found, try alternative formats
                         if not customer:
-                            # Try without +60 but with +6 (old format)
                             if phone_normalized.startswith('+60'):
-                                phone_alt = '+6' + phone_normalized[3:]  # +60123456789 -> +6123456789
+                                phone_alt = '+6' + phone_normalized[3:]
                                 customer = Customer.query.filter_by(phone=phone_alt).first()
                         
                         if customer:
-                            # Link Telegram username to customer
                             username = message['chat'].get('username', '')
                             if username:
                                 customer.telegram_id = username
@@ -932,11 +1022,7 @@ def set_webhook():
     
     bot_token = salon_settings.telegram_bot_token
     
-    # For local development, you might want to hardcode an ngrok URL
     webhook_url = f"{request.host_url}telegram-webhook"
-    
-    # If using ngrok, you might need to hardcode it:
-    # webhook_url = "https://your-ngrok-url.ngrok.io/telegram-webhook"
     
     url = f"https://api.telegram.org/bot{bot_token}/setWebhook"
     payload = {
@@ -1213,14 +1299,11 @@ def admin_update_customer_points():
     if not customer:
         return jsonify({'success': False, 'error': 'Customer not found'})
     
-    # Store old points for logging
     old_points = customer.points
     difference = new_points - old_points
     
-    # Update points
     customer.points = new_points
     
-    # Log to points history
     points_history = PointsHistory(
         customer_id=customer.id,
         old_points=old_points,
@@ -1232,12 +1315,10 @@ def admin_update_customer_points():
     db.session.add(points_history)
     db.session.commit()
     
-    # Log the action
     print(f"Admin updated points for customer: {customer.name} (ID: {customer.id})")
     print(f"  Old points: {old_points}, New points: {new_points}, Difference: {difference}")
     print(f"  Reason: {reason if reason else 'No reason provided'}")
     
-    # Optional: Send notification to customer if they have Telegram
     if customer.telegram_chat_id:
         try:
             message = f"📊 Your points have been updated!\n"

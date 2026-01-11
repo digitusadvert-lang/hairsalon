@@ -36,6 +36,10 @@ class Appointment(db.Model):
     points_deducted = db.Column(db.Integer, default=10)
     status = db.Column(db.String(20), default='pending')  # pending, confirmed, completed, cancelled
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    cancelled_at = db.Column(db.DateTime, nullable=True)
+    admin_cancelled = db.Column(db.Boolean, default=False)
+    cancellation_reason = db.Column(db.String(200), nullable=True)
 
 class Referral(db.Model):
     __tablename__ = 'referral'

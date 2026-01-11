@@ -253,6 +253,14 @@
             background: linear-gradient(135deg, #1e7e34 0%, #145523 100%);
         }
         
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+        }
+        
         .btn-sm {
             padding: 8px 15px;
             font-size: 13px;
@@ -437,6 +445,69 @@
             border: 1px solid #f5c6cb;
         }
         
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        
+        .modal-title {
+            margin-bottom: 15px;
+            color: #1a3a7a;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .modal-message {
+            margin-bottom: 20px;
+            color: #495057;
+            line-height: 1.6;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: white;
+            resize: vertical;
+            min-height: 100px;
+            margin-top: 10px;
+            font-family: inherit;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        
         /* Mobile responsiveness */
         @media (max-width: 768px) {
             .container {
@@ -477,6 +548,10 @@
             
             .card {
                 padding: 20px;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
             }
         }
         
@@ -523,6 +598,68 @@
             font-size: 11px;
             margin-top: 3px;
         }
+        
+        /* Actions container */
+        .actions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .action-row {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        /* Cancellation info */
+        .cancellation-info {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+            padding: 5px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 3px solid #dc3545;
+        }
+        
+        .admin-cancelled-badge {
+            display: inline-block;
+            background: #ffc107;
+            color: #856404;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-top: 3px;
+        }
+        
+        /* Notification styles */
+        .custom-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 320px;
+            max-width: 400px;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border-left: 4px solid;
+            background: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            animation: notificationSlideIn 0.3s ease;
+        }
+        
+        @keyframes notificationSlideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -536,7 +673,7 @@
                 </div>
                 <div>
                     <a href="{{ url_for('admin_dashboard') }}" class="dashboard-btn">
-                        <i class="fas fa-tachometer-alt"></i>
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
                     </a>
                     <a href="{{ url_for('admin_logout') }}" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout
@@ -544,7 +681,7 @@
                 </div>
             </div>
             <div class="admin-badge">
-                <i class="fas fa-calendar-check"></i>
+                <i class="fas fa-calendar-check"></i> Admin
             </div>
         </div>
         
@@ -637,6 +774,17 @@
                                 <td>
                                     <strong>{{ appointment.appointment_time.strftime('%Y-%m-%d') }}</strong><br>
                                     <span class="customer-info">{{ appointment.appointment_time.strftime('%I:%M %p') }}</span>
+                                    {% if appointment.cancelled_at %}
+                                    <div class="cancellation-info">
+                                        Cancelled: {{ appointment.cancelled_at.strftime('%Y-%m-%d %I:%M %p') }}
+                                        {% if appointment.cancellation_reason %}
+                                        <br>Reason: {{ appointment.cancellation_reason }}
+                                        {% endif %}
+                                        {% if appointment.admin_cancelled %}
+                                        <span class="admin-cancelled-badge">Admin Cancelled</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <div class="customer-name">{{ appointment.customer.name }}</div>
@@ -656,22 +804,52 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <div class="actions-container">
                                         {% if appointment.status == 'confirmed' %}
-                                        <button type="button" class="btn btn-success btn-sm complete-appointment-btn" 
-                                                data-appointment-id="{{ appointment.id }}"
-                                                data-customer-name="{{ appointment.customer.name }}">
-                                            <i class="fas fa-check"></i> Complete
-                                        </button>
+                                        <div class="action-row">
+                                            <button type="button" class="btn btn-success btn-sm complete-appointment-btn" 
+                                                    data-appointment-id="{{ appointment.id }}"
+                                                    data-customer-name="{{ appointment.customer.name }}">
+                                                <i class="fas fa-check"></i> Complete
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm cancel-appointment-btn"
+                                                    data-appointment-id="{{ appointment.id }}"
+                                                    data-customer-name="{{ appointment.customer.name }}"
+                                                    data-service="{{ appointment.service_type }}"
+                                                    data-datetime="{{ appointment.appointment_time.strftime('%Y-%m-%d %I:%M %p') }}">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                        </div>
                                         {% endif %}
                                         {% if appointment.status == 'pending' %}
-                                        <form action="{{ url_for('confirm_appointment') }}" method="POST" style="display: inline;">
-                                            <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
-                                            <button type="submit" class="btn btn-success btn-sm" 
-                                                    onclick="return confirm('Confirm this appointment?')">
-                                                <i class="fas fa-check-circle"></i> Confirm
+                                        <div class="action-row">
+                                            <form action="{{ url_for('confirm_appointment') }}" method="POST" style="display: inline;">
+                                                <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
+                                                <button type="submit" class="btn btn-success btn-sm" 
+                                                        onclick="return confirm('Confirm appointment for {{ appointment.customer.name }}?')">
+                                                    <i class="fas fa-check-circle"></i> Confirm
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-danger btn-sm cancel-appointment-btn"
+                                                    data-appointment-id="{{ appointment.id }}"
+                                                    data-customer-name="{{ appointment.customer.name }}"
+                                                    data-service="{{ appointment.service_type }}"
+                                                    data-datetime="{{ appointment.appointment_time.strftime('%Y-%m-%d %I:%M %p') }}">
+                                                <i class="fas fa-times"></i> Cancel
                                             </button>
-                                        </form>
+                                        </div>
+                                        {% endif %}
+                                        {% if appointment.status == 'cancelled' %}
+                                        <div class="action-row">
+                                            <span class="customer-info" style="font-style: italic;">Cancelled</span>
+                                        </div>
+                                        {% endif %}
+                                        {% if appointment.status == 'completed' %}
+                                        <div class="action-row">
+                                            <span class="text-success" style="display: flex; align-items: center; gap: 5px;">
+                                                <i class="fas fa-check-circle"></i> Completed
+                                            </span>
+                                        </div>
                                         {% endif %}
                                     </div>
                                 </td>
@@ -708,14 +886,49 @@
                         <div class="number">{{ appointments|selectattr('status', 'equalto', 'pending')|list|length }}</div>
                         <div class="label">Pending</div>
                     </div>
+                    <div class="stat-item">
+                        <div class="number">{{ appointments|selectattr('status', 'equalto', 'cancelled')|list|length }}</div>
+                        <div class="label">Cancelled</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Cancel Appointment Modal -->
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">
+                <i class="fas fa-exclamation-triangle"></i> Cancel Appointment
+            </h3>
+            <div class="modal-message" id="modalMessage">
+                <!-- Message will be inserted here -->
+            </div>
+            <div>
+                <label for="cancellationReason">Cancellation Reason (Optional):</label>
+                <textarea id="cancellationReason" placeholder="Enter reason for cancellation..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-danger" onclick="confirmAdminCancellation()">
+                    <i class="fas fa-times"></i> Cancel Appointment
+                </button>
+                <button class="btn btn-outline" onclick="closeCancelModal()">
+                    <i class="fas fa-times"></i> Keep Appointment
+                </button>
+            </div>
+        </div>
+    </div>
+
 <script>
+// Global variables for cancellation
+let appointmentToCancel = null;
+let cancelCustomerName = null;
+let cancelService = null;
+let cancelDateTime = null;
+
 // Handle Complete button clicks
 document.addEventListener('DOMContentLoaded', function() {
+    // Complete appointment buttons
     document.querySelectorAll('.complete-appointment-btn').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -726,6 +939,33 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirm(`Mark appointment as completed for ${customerName}?`)) {
                 completeAppointment(appointmentId, this);
             }
+        });
+    });
+    
+    // Cancel appointment buttons
+    document.querySelectorAll('.cancel-appointment-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            appointmentToCancel = this.getAttribute('data-appointment-id');
+            cancelCustomerName = this.getAttribute('data-customer-name');
+            cancelService = this.getAttribute('data-service');
+            cancelDateTime = this.getAttribute('data-datetime');
+            
+            // Show cancellation modal
+            document.getElementById('modalMessage').innerHTML = `
+                <p>Are you sure you want to cancel this appointment?</p>
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                    <p><strong>Customer:</strong> ${cancelCustomerName}</p>
+                    <p><strong>Service:</strong> ${cancelService}</p>
+                    <p><strong>Date & Time:</strong> ${cancelDateTime}</p>
+                </div>
+                <p style="margin-top: 10px; color: #28a745; font-weight: 600;">
+                    <i class="fas fa-info-circle"></i> 10 points will be refunded to the customer.
+                </p>
+            `;
+            
+            document.getElementById('cancelModal').style.display = 'flex';
         });
     });
 });
@@ -749,43 +989,35 @@ function completeAppointment(appointmentId, buttonElement) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Show success notification
             showNotification(data.message, 'success');
             
-            // Update the appointment row - FIXED SELECTORS
+            // Update the appointment row
             if (row) {
-                // Find the status cell (usually the cell with the status badge)
+                // Find the status cell
                 const cells = row.querySelectorAll('td');
-                let statusCell = null;
-                
-                // Look for the cell containing the status badge
-                cells.forEach(cell => {
-                    if (cell.innerHTML.includes('badge') || cell.classList.contains('status')) {
-                        statusCell = cell;
-                    }
-                });
-                
-                // Update status
-                if (statusCell) {
-                    statusCell.innerHTML = '<span class="status-badge status-completed">Completed</span>';
-                } else {
-                    // If we can't find the specific cell, update the 7th cell (adjust as needed)
-                    if (cells.length >= 7) {
-                        cells[6].innerHTML = '<span class="status-badge status-completed">Completed</span>';
-                    }
+                if (cells.length >= 7) {
+                    cells[6].innerHTML = '<span class="status-badge status-completed">Completed</span>';
                 }
                 
-                // Remove the Complete button
-                const buttonCell = buttonElement.closest('td');
-                if (buttonCell) {
-                    buttonCell.innerHTML = '<span class="text-success" style="display: flex; align-items: center; gap: 5px;"><i class="fas fa-check-circle"></i> Completed</span>';
+                // Update actions cell
+                const actionsCell = buttonElement.closest('td');
+                if (actionsCell) {
+                    actionsCell.innerHTML = `
+                        <div class="actions-container">
+                            <div class="action-row">
+                                <span class="text-success" style="display: flex; align-items: center; gap: 5px;">
+                                    <i class="fas fa-check-circle"></i> Completed
+                                </span>
+                            </div>
+                        </div>
+                    `;
                 }
             }
-        } else {
-            // Show error
-            showNotification(data.error || 'Error completing appointment', 'error');
             
-            // Reset button
+            // Update statistics
+            updateStatistics();
+        } else {
+            showNotification(data.error || 'Error completing appointment', 'error');
             buttonElement.innerHTML = originalHTML;
             buttonElement.disabled = false;
         }
@@ -797,7 +1029,96 @@ function completeAppointment(appointmentId, buttonElement) {
     });
 }
 
-// Simple notification function
+// Modal functions
+function closeCancelModal() {
+    document.getElementById('cancelModal').style.display = 'none';
+    document.getElementById('cancellationReason').value = '';
+    appointmentToCancel = null;
+    cancelCustomerName = null;
+    cancelService = null;
+    cancelDateTime = null;
+}
+
+function confirmAdminCancellation() {
+    if (!appointmentToCancel) return;
+    
+    const reason = document.getElementById('cancellationReason').value;
+    const cancelBtn = document.querySelector('.modal-buttons .btn-danger');
+    const originalText = cancelBtn.innerHTML;
+    
+    // Show loading
+    cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+    cancelBtn.disabled = true;
+    
+    const formData = new FormData();
+    formData.append('appointment_id', appointmentToCancel);
+    formData.append('reason', reason);
+    
+    fetch('/admin/cancel-appointment', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            
+            // Close modal
+            closeCancelModal();
+            
+            // Find and update the appointment row
+            const row = document.querySelector(`[data-appointment-id="${appointmentToCancel}"]`)?.closest('tr');
+            if (row) {
+                // Find the appointment in the table and update it
+                location.reload(); // Simple reload for now
+            }
+        } else {
+            showNotification(data.error, 'error');
+            cancelBtn.innerHTML = originalText;
+            cancelBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        showNotification('Network error: ' + error, 'error');
+        cancelBtn.innerHTML = originalText;
+        cancelBtn.disabled = false;
+    });
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('cancelModal');
+    if (event.target == modal) {
+        closeCancelModal();
+    }
+}
+
+// Update statistics function
+function updateStatistics() {
+    // Simple implementation - reloads the statistics section
+    const statsGrid = document.querySelector('.stats-grid');
+    if (statsGrid) {
+        // In a real implementation, you would fetch updated stats from the server
+        // For now, we'll just update the counts based on the table
+        const rows = document.querySelectorAll('tbody tr');
+        const total = rows.length;
+        const confirmed = Array.from(rows).filter(row => row.querySelector('.status-confirmed')).length;
+        const completed = Array.from(rows).filter(row => row.querySelector('.status-completed')).length;
+        const pending = Array.from(rows).filter(row => row.querySelector('.status-pending')).length;
+        const cancelled = Array.from(rows).filter(row => row.querySelector('.status-cancelled')).length;
+        
+        const statItems = statsGrid.querySelectorAll('.stat-item');
+        if (statItems.length >= 5) {
+            statItems[0].querySelector('.number').textContent = total;
+            statItems[1].querySelector('.number').textContent = confirmed;
+            statItems[2].querySelector('.number').textContent = completed;
+            statItems[3].querySelector('.number').textContent = pending;
+            statItems[4].querySelector('.number').textContent = cancelled;
+        }
+    }
+}
+
+// Notification function
 function showNotification(message, type = 'success') {
     // Remove any existing notifications
     document.querySelectorAll('.custom-notification').forEach(el => el.remove());
@@ -825,32 +1146,9 @@ function showNotification(message, type = 'success') {
     `;
     
     // Apply styles
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        min-width: 320px;
-        max-width: 400px;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        border-left: 4px solid;
-        background: white;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    // Set colors based on type
-    if (type === 'success') {
-        notification.style.borderLeftColor = '#28a745';
-        notification.style.backgroundColor = '#d4edda';
-        notification.style.color = '#155724';
-    } else {
-        notification.style.borderLeftColor = '#dc3545';
-        notification.style.backgroundColor = '#f8d7da';
-        notification.style.color = '#721c24';
-    }
+    notification.style.borderLeftColor = type === 'success' ? '#28a745' : '#dc3545';
+    notification.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
+    notification.style.color = type === 'success' ? '#155724' : '#721c24';
     
     document.body.appendChild(notification);
     
@@ -861,41 +1159,6 @@ function showNotification(message, type = 'success') {
         }
     }, 5000);
 }
-
-// Make sure animation CSS is added
-if (!document.querySelector('#notification-animation')) {
-    const style = document.createElement('style');
-    style.id = 'notification-animation';
-    style.textContent = `
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Add CSS animation
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-`;
-document.head.appendChild(style);
 </script>
 
 </body>
