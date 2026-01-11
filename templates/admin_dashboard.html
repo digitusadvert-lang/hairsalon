@@ -145,7 +145,7 @@
         }
         
         .card-full {
-            grid-column: span 4;
+            grid-column: 1 / -1;
         }
         
         .card-half {
@@ -173,7 +173,7 @@
         /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
         }
         
@@ -287,7 +287,7 @@
             font-size: 13px;
         }
         
-        /* Status badges */
+        /* Status badges - FIXED: Added direct class definitions */
         .status-badge {
             padding: 8px 15px;
             border-radius: 20px;
@@ -358,7 +358,7 @@
         /* Quick Actions */
         .quick-actions-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 15px;
             margin-top: 15px;
         }
@@ -373,79 +373,6 @@
         .customer-name {
             font-weight: 600;
             color: #1a3a7a;
-        }
-        
-        /* Mobile responsiveness */
-        @media (max-width: 1200px) {
-            .dashboard-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .card-full, .card-half {
-                grid-column: span 2;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                margin: 10px auto;
-                border-radius: 10px;
-            }
-            
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-                padding: 20px;
-            }
-            
-            .card-full, .card-half {
-                grid-column: span 1;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .admin-nav ul {
-                flex-direction: column;
-                gap: 0;
-            }
-            
-            .admin-nav a {
-                padding: 15px 20px;
-                border-bottom: 1px solid rgba(255,255,255,0.1);
-            }
-            
-            table {
-                display: block;
-                overflow-x: auto;
-            }
-            
-            .quick-actions-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header {
-                padding: 20px;
-            }
-            
-            .header h1 {
-                font-size: 28px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            
-            .stat-card .number {
-                font-size: 36px;
-            }
-            
-            .stat-card .icon {
-                font-size: 32px;
-            }
         }
         
         /* No appointments message */
@@ -477,12 +404,92 @@
         .admin-badge {
             position: absolute;
             top: 25px;
-            right: 30px;
+            right: 130px; /* Moved left to avoid overlap with logout button */
             background: rgba(255, 255, 255, 0.2);
             padding: 8px 15px;
             border-radius: 20px;
             font-size: 14px;
             font-weight: 500;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .card-full {
+                grid-column: 1 / -1;
+            }
+            
+            .card-half {
+                grid-column: 1 / -1;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .quick-actions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-nav ul {
+                flex-direction: column;
+            }
+            
+            .admin-nav a {
+                padding: 15px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .admin-badge {
+                position: static;
+                margin-top: 10px;
+                display: inline-block;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px auto;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .stat-card .number {
+                font-size: 36px;
+            }
+            
+            .stat-card .icon {
+                font-size: 32px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -502,7 +509,7 @@
                 </div>
             </div>
             <div class="admin-badge">
-                <i class="fas fa-user-shield"></i>
+                <i class="fas fa-user-shield"></i> Administrator
             </div>
         </div>
         
