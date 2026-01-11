@@ -27,7 +27,7 @@
         
         .header {
             background: linear-gradient(135deg, #0d1b3e 0%, #1a3a7a 100%);
-            color: white;
+            color: black;
             padding: 25px 30px;
         }
         
@@ -198,88 +198,21 @@
             background: linear-gradient(135deg, #006699 0%, #004d66 100%) !important;
         }
         
-        /* ==================== FIXED CALENDAR STYLES ==================== */
-        /* Mobile Calendar Container */
-        .calendar-scroll-container {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin: 15px 0;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 10px;
-            position: relative;
-            scrollbar-width: thin;
-            scrollbar-color: #2a5298 #f1f1f1;
-        }
-        
-        .calendar-scroll-container::-webkit-scrollbar {
-            height: 8px;
-        }
-        
-        .calendar-scroll-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        
-        .calendar-scroll-container::-webkit-scrollbar-thumb {
-            background: #2a5298;
-            border-radius: 10px;
-        }
-        
-        .calendar-scroll-container::-webkit-scrollbar-thumb:hover {
-            background: #1a3a7a;
-        }
-        
-        /* Calendar wrapper with fixed width for scrolling */
-        .calendar-wrapper {
-            display: inline-block;
-            min-width: 1200px; /* Fixed width that's definitely scrollable */
-        }
-        
-        /* Weekday headers - fixed width columns */
+        /* Calendar styles */
         .calendar-weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 170px); /* Fixed width columns */
-            text-align: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #e9ecef;
-            margin-bottom: 10px;
+            background: #f8f9fa;
         }
         
         .weekday-header {
-            font-weight: 600;
             color: #1a3a7a;
-            font-size: 14px;
-            padding: 5px;
+            font-weight: 600;
+            padding: 12px 0;
         }
         
-        /* Calendar grid - fixed width columns */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 170px); /* Fixed width columns */
-            gap: 5px;
-        }
-        
-        /* Calendar day cells */
         .calendar-day-cell {
-            height: 90px;
-            width: 165px; /* Fixed width */
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
+            border: 1px solid #e9ecef;
+            background: white;
             transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .calendar-day-cell:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
         }
         
         .calendar-day-cell.today {
@@ -305,193 +238,10 @@
             background: #fff8f8;
         }
         
-        .calendar-empty-cell {
-            height: 90px;
-            width: 165px;
-            border: 1px solid transparent;
-            border-radius: 6px;
-            background: transparent;
-        }
-        
         .date-number {
             color: #1a3a7a;
             font-weight: bold;
-            font-size: 18px;
-            margin-bottom: 5px;
         }
-        
-        .date-count, .date-status {
-            font-size: 12px;
-            color: #666;
-        }
-        
-        /* Mobile legend styles */
-        .mobile-legend {
-            display: none;
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 6px;
-            margin: 15px 0;
-            border: 1px solid #e9ecef;
-        }
-        
-        .mobile-legend .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-        }
-        
-        .mobile-legend .legend-color {
-            width: 15px;
-            height: 15px;
-            border-radius: 3px;
-            display: inline-block;
-        }
-        
-        .mobile-legend .legend-color.available {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .mobile-legend .legend-color.medium {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-        }
-        
-        .mobile-legend .legend-color.full {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-        }
-        
-        /* Touch-friendly scroll hint */
-        @media (max-width: 768px) {
-            .calendar-scroll-container {
-                position: relative;
-            }
-            
-            .calendar-scroll-container::before {
-                content: "← →";
-                position: absolute;
-                right: 15px;
-                top: 50%;
-                transform: translateY(-50%);
-                font-size: 20px;
-                color: #2a5298;
-                background: rgba(255, 255, 255, 0.9);
-                padding: 8px 12px;
-                border-radius: 20px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                z-index: 10;
-                pointer-events: none;
-                animation: swipeHint 2s infinite;
-            }
-            
-            @keyframes swipeHint {
-                0%, 100% { transform: translateY(-50%) translateX(0); }
-                25% { transform: translateY(-50%) translateX(-5px); }
-                75% { transform: translateY(-50%) translateX(5px); }
-            }
-            
-            .calendar-wrapper {
-                min-width: 1000px; /* Slightly smaller for mobile but still scrollable */
-            }
-            
-            .calendar-weekdays {
-                grid-template-columns: repeat(7, 142px);
-            }
-            
-            .calendar-grid {
-                grid-template-columns: repeat(7, 142px);
-            }
-            
-            .calendar-day-cell {
-                height: 85px;
-                width: 137px;
-            }
-            
-            .calendar-empty-cell {
-                height: 85px;
-                width: 137px;
-            }
-            
-            .mobile-legend {
-                display: block !important;
-            }
-        }
-        
-        /* Alternative for very small screens */
-        @media (max-width: 480px) {
-            .calendar-scroll-container::before {
-                content: "Swipe →";
-                font-size: 14px;
-                padding: 6px 10px;
-                right: 10px;
-            }
-            
-            .calendar-wrapper {
-                min-width: 850px;
-            }
-            
-            .calendar-weekdays {
-                grid-template-columns: repeat(7, 120px);
-            }
-            
-            .calendar-grid {
-                grid-template-columns: repeat(7, 120px);
-                gap: 3px;
-            }
-            
-            .calendar-day-cell {
-                height: 80px;
-                width: 115px;
-                padding: 8px;
-            }
-            
-            .calendar-empty-cell {
-                height: 80px;
-                width: 115px;
-            }
-            
-            .date-number {
-                font-size: 16px;
-            }
-            
-            .date-count, .date-status {
-                font-size: 11px;
-            }
-        }
-        
-        /* Desktop styles - no scrolling needed */
-        @media (min-width: 769px) {
-            .calendar-wrapper {
-                min-width: auto;
-                width: 100%;
-            }
-            
-            .calendar-weekdays {
-                grid-template-columns: repeat(7, 1fr);
-            }
-            
-            .calendar-grid {
-                grid-template-columns: repeat(7, 1fr);
-            }
-            
-            .calendar-day-cell {
-                width: auto;
-                min-width: auto;
-            }
-            
-            .calendar-empty-cell {
-                width: auto;
-                min-width: auto;
-            }
-            
-            .mobile-legend {
-                display: none !important;
-            }
-        }
-        /* ==================== END FIXED CALENDAR STYLES ==================== */
         
         /* Time slots */
         .time-slots {
@@ -660,26 +410,9 @@
                 gap: 15px;
             }
             
-            .calendar-scroll-container {
-                margin: 10px -5px;
-                padding: 5px;
-                border-left: none;
-                border-right: none;
-                border-radius: 0;
-            }
-            
             .time-slots {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
-            }
-            
-            .time-slot {
-                padding: 15px 5px;
-                font-size: 14px;
-                min-height: 45px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 10px;
             }
             
             .header {
@@ -699,10 +432,6 @@
             .btn {
                 padding: 12px 20px;
                 font-size: 15px;
-            }
-            
-            .time-slots {
-                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -751,66 +480,59 @@
                         Select Date:
                     </label>
                     
-                    <!-- Fixed Calendar Container -->
-                    <div class="calendar-scroll-container">
-                        <div class="calendar-wrapper">
-                            <!-- Weekday headers -->
-                            <div class="calendar-weekdays">
-                                <div class="weekday-header">Mon</div>
-                                <div class="weekday-header">Tue</div>
-                                <div class="weekday-header">Wed</div>
-                                <div class="weekday-header">Thu</div>
-                                <div class="weekday-header">Fri</div>
-                                <div class="weekday-header">Sat</div>
-                                <div class="weekday-header">Sun</div>
-                            </div>
-                            
-                            <!-- Calendar grid -->
-                            <div class="calendar-grid">
-                                {% for day in calendar_days %}
-                                <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %}"
-                                     data-date="{{ day.date.isoformat() }}"
-                                     onclick="selectDate('{{ day.date.isoformat() }}', this)">
-                                    
-                                    <div class="date-number">
-                                        {{ day.day }}
-                                    </div>
-                                    
-                                    <div class="date-count">
-                                        {{ day.count }}/{{ day.max }}
-                                    </div>
-                                    
-                                    <div class="date-status">
-                                        {{ day.status }}
-                                    </div>
-                                </div>
-                                {% endfor %}
-                                
-                                <!-- Fill empty cells if needed (42 cells for 6 weeks) -->
-                                {% for i in range(42 - calendar_days|length) %}
-                                <div class="calendar-empty-cell"></div>
-                                {% endfor %}
-                            </div>
-                        </div>
+                <div class="calendar-container">
+                    <!-- Weekday headers -->
+                    <div class="calendar-weekdays">
+                        <div class="weekday-header">Mon</div>
+                        <div class="weekday-header">Tue</div>
+                        <div class="weekday-header">Wed</div>
+                        <div class="weekday-header">Thu</div>
+                        <div class="weekday-header">Fri</div>
+                        <div class="weekday-header">Sat</div>
+                        <div class="weekday-header">Sun</div>
                     </div>
                     
-                    <!-- Mobile Legend -->
-                    <div class="mobile-legend">
-                        <div class="legend-item">
-                            <span class="legend-color available"></span>
-                            <span>Available - Green</span>
+                    <!-- Calendar grid -->
+                    <div class="calendar-grid">
+                        {% for day in calendar_days %}
+                        <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %}"
+                             data-date="{{ day.date.isoformat() }}"
+                             onclick="selectDate('{{ day.date.isoformat() }}', this)">
+                            
+                            <div class="date-number">
+                                {{ day.day }}
+                            </div>
+                            
+                            <div class="date-count">
+                                {{ day.count }}/{{ day.max }}
+                            </div>
+                            
+                            <div class="date-status">
+                                {{ day.status }}
+                            </div>
                         </div>
-                        <div class="legend-item">
-                            <span class="legend-color medium"></span>
-                            <span>Few Left - Yellow</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-color full"></span>
-                            <span>Full - Red</span>
-                        </div>
-                        <div class="legend-item" style="margin-top: 8px; font-size: 11px; color: #666; width: 100%; text-align: center;">
-                            <i class="fas fa-hand-point-right"></i> Swipe left/right to see more dates
-                        </div>
+                        {% endfor %}
+                        
+                        <!-- Fill empty cells if needed (42 cells for 6 weeks) -->
+                        {% for i in range(42 - calendar_days|length) %}
+                        <div class="calendar-empty-cell"></div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Mobile Legend -->
+                <div class="mobile-legend">
+                    <div class="legend-item">
+                        <span class="legend-color available"></span>
+                        <span>Available - Green</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color medium"></span>
+                        <span>Few Left - Yellow</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color full"></span>
+                        <span>Full - Red</span>
                     </div>
                 </div>
                 
@@ -818,7 +540,7 @@
                     <label for="time-slot">Select Time:</label>
                     <div class="time-slots" id="time-slots-container">
                         <!-- Time slots will be loaded here -->
-                        <p style="text-align: center; color: #666; padding: 20px;">Select a date first</p>
+                        <p>Select a date first</p>
                     </div>
                 </div>
                 
@@ -934,71 +656,20 @@
         let selectedTime = null;
         let selectedService = null;
         
-        // Enhanced touch scrolling for mobile
-        function initCalendarTouchScroll() {
-            const calendarContainer = document.querySelector('.calendar-scroll-container');
-            if (!calendarContainer) return;
-            
-            let isScrolling = false;
-            let startX = 0;
-            let scrollLeft = 0;
-            
-            calendarContainer.addEventListener('touchstart', (e) => {
-                isScrolling = true;
-                startX = e.touches[0].pageX - calendarContainer.offsetLeft;
-                scrollLeft = calendarContainer.scrollLeft;
-            });
-            
-            calendarContainer.addEventListener('touchmove', (e) => {
-                if (!isScrolling) return;
-                e.preventDefault();
-                const x = e.touches[0].pageX - calendarContainer.offsetLeft;
-                const walk = (x - startX) * 2; // Multiply for faster scrolling
-                calendarContainer.scrollLeft = scrollLeft - walk;
-            });
-            
-            calendarContainer.addEventListener('touchend', () => {
-                isScrolling = false;
-            });
-            
-            // Also enable mouse drag for desktop testing
-            calendarContainer.addEventListener('mousedown', (e) => {
-                if (window.innerWidth <= 768) {
-                    isScrolling = true;
-                    startX = e.pageX - calendarContainer.offsetLeft;
-                    scrollLeft = calendarContainer.scrollLeft;
-                    calendarContainer.style.cursor = 'grabbing';
-                }
-            });
-            
-            document.addEventListener('mousemove', (e) => {
-                if (!isScrolling) return;
-                e.preventDefault();
-                const x = e.pageX - calendarContainer.offsetLeft;
-                const walk = (x - startX) * 2;
-                calendarContainer.scrollLeft = scrollLeft - walk;
-            });
-            
-            document.addEventListener('mouseup', () => {
-                isScrolling = false;
-                calendarContainer.style.cursor = 'grab';
-            });
-        }
-        
         function loadTimeSlots(date) {
             const container = document.getElementById('time-slots-container');
-            container.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">Loading time slots...</p>';
+            container.innerHTML = '<p>Loading time slots...</p>';
             
             fetch(`/api/time-slots?date=${date}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        container.innerHTML = `<p class="error" style="color: #dc3545; text-align: center;">${data.error}</p>`;
+                        container.innerHTML = `<p class="error">${data.error}</p>`;
                         return;
                     }
                     
                     if (data.time_slots.length === 0) {
-                        container.innerHTML = '<p style="text-align: center; color: #666;">No available time slots for this date.</p>';
+                        container.innerHTML = '<p>No available time slots for this date.</p>';
                         return;
                     }
                     
@@ -1013,36 +684,9 @@
                     });
                 })
                 .catch(error => {
-                    container.innerHTML = '<p style="text-align: center; color: #666;">Error loading time slots.</p>';
+                    container.innerHTML = '<p>Error loading time slots.</p>';
                     console.error(error);
                 });
-        }
-        
-        function selectDate(date, element) {
-            selectedDate = date;
-            
-            // Reset all calendar cells
-            document.querySelectorAll('.calendar-day-cell').forEach(day => {
-                day.style.border = '1px solid #e0e0e0';
-                day.style.background = '';
-                day.classList.remove('selected');
-            });
-            
-            // Highlight selected date
-            element.classList.add('selected');
-            element.style.border = '2px solid #28a745';
-            element.style.background = '#f0fff4';
-            
-            // Add box shadow for better visibility
-            element.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-            
-            // Load time slots
-            loadTimeSlots(date);
-            
-            // Scroll into view on mobile
-            if (window.innerWidth <= 768) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }
         }
         
         function selectTime(datetime, element) {
@@ -1063,7 +707,6 @@
             // Enable book button
             const bookBtn = document.getElementById('book-btn');
             bookBtn.disabled = false;
-            bookBtn.style.cursor = 'pointer';
         }
         
         function bookAppointment() {
@@ -1078,7 +721,6 @@
             
             bookBtn.disabled = true;
             bookBtn.textContent = 'Booking...';
-            bookBtn.style.cursor = 'not-allowed';
             messageDiv.innerHTML = '';
             
             const formData = new FormData();
@@ -1095,7 +737,6 @@
                 if (data.success) {
                     messageDiv.innerHTML = `<div class="success">${data.message}</div>`;
                     bookBtn.textContent = 'Appointment Booked!';
-                    bookBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #1e7e34 100%)';
                     
                     // Update points display
                     setTimeout(() => {
@@ -1105,14 +746,12 @@
                     messageDiv.innerHTML = `<div class="error">${data.error}</div>`;
                     bookBtn.disabled = false;
                     bookBtn.textContent = 'Book Appointment (10 points)';
-                    bookBtn.style.cursor = 'pointer';
                 }
             })
             .catch(error => {
                 messageDiv.innerHTML = `<div class="error">Network error. Please try again.</div>`;
                 bookBtn.disabled = false;
                 bookBtn.textContent = 'Book Appointment (10 points)';
-                bookBtn.style.cursor = 'pointer';
                 console.error(error);
             });
         }
@@ -1120,22 +759,8 @@
         function copyReferralLink() {
             const link = "{{ referral_url }}";
             navigator.clipboard.writeText(link)
-                .then(() => {
-                    // Show a temporary success message
-                    const btn = event.target;
-                    const originalText = btn.textContent;
-                    btn.textContent = '✓ Copied!';
-                    btn.style.background = 'linear-gradient(135deg, #28a745 0%, #1e7e34 100%)';
-                    
-                    setTimeout(() => {
-                        btn.textContent = originalText;
-                        btn.style.background = '';
-                    }, 2000);
-                })
-                .catch(err => {
-                    console.error('Failed to copy: ', err);
-                    alert('Failed to copy link. Please copy it manually.');
-                });
+                .then(() => alert('Referral link copied to clipboard!'))
+                .catch(err => console.error('Failed to copy: ', err));
         }
         
         // Check points periodically
@@ -1163,39 +788,48 @@
             const legend = document.querySelector('.mobile-legend');
             if (window.innerWidth <= 768) {
                 if (legend) legend.style.display = 'block';
+                
+                // Adjust calendar container for mobile
+                const calendarContainer = document.querySelector('.calendar-container');
+                if (calendarContainer) {
+                    calendarContainer.style.padding = '10px';
+                }
             } else {
                 if (legend) legend.style.display = 'none';
             }
         }
         
-        // Initialize everything when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize calendar touch scrolling
-            initCalendarTouchScroll();
-            
-            // Update mobile display
-            updateCalendarForMobile();
-            
-            // Auto-scroll to today's date on mobile
-            const todayCell = document.querySelector('.calendar-day-cell.today');
-            if (todayCell && window.innerWidth <= 768) {
-                setTimeout(() => {
-                    todayCell.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                }, 1000);
-            }
-            
-            // Add grab cursor to calendar on mobile
-            const calendarContainer = document.querySelector('.calendar-scroll-container');
-            if (calendarContainer && window.innerWidth <= 768) {
-                calendarContainer.style.cursor = 'grab';
-            }
-        });
-        
-        // Update on resize
+        // Run on load and resize
+        window.addEventListener('load', updateCalendarForMobile);
         window.addEventListener('resize', updateCalendarForMobile);
         
-        // Check points on load
-        checkPoints();
+        // Improved selectDate function for mobile
+        function selectDate(date, element) {
+            selectedDate = date;
+            
+            // Reset all calendar cells
+            document.querySelectorAll('.calendar-day-cell').forEach(day => {
+                day.style.border = '1px solid #e0e0e0';
+                day.style.background = '';
+                day.classList.remove('selected');
+            });
+            
+            // Highlight selected date
+            element.classList.add('selected');
+            element.style.border = '2px solid #28a745';
+            element.style.background = '#f0fff4';
+            
+            // Add box shadow for better visibility
+            element.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            
+            // Load time slots
+            loadTimeSlots(date);
+            
+            // Scroll into view on mobile
+            if (window.innerWidth <= 768) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
     </script>
 </body>
 </html>
