@@ -198,8 +198,10 @@
             background: linear-gradient(135deg, #006699 0%, #004d66 100%) !important;
         }
         
-        /* Mobile Calendar Fix */
-        .calendar-container {
+        /* ==================== FIXED CALENDAR STYLES ==================== */
+        /* Mobile Calendar Container */
+        .calendar-scroll-container {
+            width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             margin: 15px 0;
@@ -207,13 +209,38 @@
             border-radius: 8px;
             padding: 10px;
             position: relative;
+            scrollbar-width: thin;
+            scrollbar-color: #2a5298 #f1f1f1;
         }
         
+        .calendar-scroll-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .calendar-scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .calendar-scroll-container::-webkit-scrollbar-thumb {
+            background: #2a5298;
+            border-radius: 10px;
+        }
+        
+        .calendar-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #1a3a7a;
+        }
+        
+        /* Calendar wrapper with fixed width for scrolling */
+        .calendar-wrapper {
+            display: inline-block;
+            min-width: 1200px; /* Fixed width that's definitely scrollable */
+        }
+        
+        /* Weekday headers - fixed width columns */
         .calendar-weekdays {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            min-width: 600px;
-            gap: 5px;
+            grid-template-columns: repeat(7, 170px); /* Fixed width columns */
             text-align: center;
             padding: 10px 0;
             border-bottom: 1px solid #e9ecef;
@@ -224,20 +251,23 @@
             font-weight: 600;
             color: #1a3a7a;
             font-size: 14px;
+            padding: 5px;
         }
         
+        /* Calendar grid - fixed width columns */
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            min-width: 600px;
+            grid-template-columns: repeat(7, 170px); /* Fixed width columns */
             gap: 5px;
         }
         
+        /* Calendar day cells */
         .calendar-day-cell {
-            min-height: 70px;
+            height: 90px;
+            width: 165px; /* Fixed width */
             border: 1px solid #e0e0e0;
             border-radius: 6px;
-            padding: 8px;
+            padding: 10px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
@@ -276,7 +306,8 @@
         }
         
         .calendar-empty-cell {
-            min-height: 70px;
+            height: 90px;
+            width: 165px;
             border: 1px solid transparent;
             border-radius: 6px;
             background: transparent;
@@ -285,12 +316,12 @@
         .date-number {
             color: #1a3a7a;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 18px;
             margin-bottom: 5px;
         }
         
         .date-count, .date-status {
-            font-size: 11px;
+            font-size: 12px;
             color: #666;
         }
         
@@ -298,17 +329,16 @@
         .mobile-legend {
             display: none;
             background: #f8f9fa;
-            padding: 10px;
+            padding: 12px;
             border-radius: 6px;
-            margin: 10px 0;
+            margin: 15px 0;
             border: 1px solid #e9ecef;
         }
         
         .mobile-legend .legend-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 5px;
+            gap: 8px;
             font-size: 12px;
         }
         
@@ -333,6 +363,135 @@
             background-color: #f8d7da;
             border: 1px solid #f5c6cb;
         }
+        
+        /* Touch-friendly scroll hint */
+        @media (max-width: 768px) {
+            .calendar-scroll-container {
+                position: relative;
+            }
+            
+            .calendar-scroll-container::before {
+                content: "← →";
+                position: absolute;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 20px;
+                color: #2a5298;
+                background: rgba(255, 255, 255, 0.9);
+                padding: 8px 12px;
+                border-radius: 20px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                z-index: 10;
+                pointer-events: none;
+                animation: swipeHint 2s infinite;
+            }
+            
+            @keyframes swipeHint {
+                0%, 100% { transform: translateY(-50%) translateX(0); }
+                25% { transform: translateY(-50%) translateX(-5px); }
+                75% { transform: translateY(-50%) translateX(5px); }
+            }
+            
+            .calendar-wrapper {
+                min-width: 1000px; /* Slightly smaller for mobile but still scrollable */
+            }
+            
+            .calendar-weekdays {
+                grid-template-columns: repeat(7, 142px);
+            }
+            
+            .calendar-grid {
+                grid-template-columns: repeat(7, 142px);
+            }
+            
+            .calendar-day-cell {
+                height: 85px;
+                width: 137px;
+            }
+            
+            .calendar-empty-cell {
+                height: 85px;
+                width: 137px;
+            }
+            
+            .mobile-legend {
+                display: block !important;
+            }
+        }
+        
+        /* Alternative for very small screens */
+        @media (max-width: 480px) {
+            .calendar-scroll-container::before {
+                content: "Swipe →";
+                font-size: 14px;
+                padding: 6px 10px;
+                right: 10px;
+            }
+            
+            .calendar-wrapper {
+                min-width: 850px;
+            }
+            
+            .calendar-weekdays {
+                grid-template-columns: repeat(7, 120px);
+            }
+            
+            .calendar-grid {
+                grid-template-columns: repeat(7, 120px);
+                gap: 3px;
+            }
+            
+            .calendar-day-cell {
+                height: 80px;
+                width: 115px;
+                padding: 8px;
+            }
+            
+            .calendar-empty-cell {
+                height: 80px;
+                width: 115px;
+            }
+            
+            .date-number {
+                font-size: 16px;
+            }
+            
+            .date-count, .date-status {
+                font-size: 11px;
+            }
+        }
+        
+        /* Desktop styles - no scrolling needed */
+        @media (min-width: 769px) {
+            .calendar-wrapper {
+                min-width: auto;
+                width: 100%;
+            }
+            
+            .calendar-weekdays {
+                grid-template-columns: repeat(7, 1fr);
+            }
+            
+            .calendar-grid {
+                grid-template-columns: repeat(7, 1fr);
+            }
+            
+            .calendar-day-cell {
+                width: auto;
+                min-width: auto;
+            }
+            
+            .calendar-empty-cell {
+                width: auto;
+                min-width: auto;
+            }
+            
+            .mobile-legend {
+                display: none !important;
+            }
+        }
+        /* ==================== END FIXED CALENDAR STYLES ==================== */
         
         /* Time slots */
         .time-slots {
@@ -501,40 +660,12 @@
                 gap: 15px;
             }
             
-            .calendar-container {
+            .calendar-scroll-container {
                 margin: 10px -5px;
                 padding: 5px;
                 border-left: none;
                 border-right: none;
                 border-radius: 0;
-            }
-            
-            .calendar-grid {
-                min-width: 500px;
-                gap: 3px;
-            }
-            
-            .calendar-weekdays {
-                min-width: 500px;
-                gap: 3px;
-            }
-            
-            .weekday-header {
-                font-size: 12px;
-            }
-            
-            .calendar-day-cell {
-                min-height: 60px;
-                padding: 5px;
-                font-size: 12px;
-            }
-            
-            .date-number {
-                font-size: 14px;
-            }
-            
-            .date-count, .date-status {
-                font-size: 10px;
             }
             
             .time-slots {
@@ -562,10 +693,6 @@
             .card {
                 padding: 20px;
             }
-            
-            .mobile-legend {
-                display: block !important;
-            }
         }
         
         @media (max-width: 480px) {
@@ -576,58 +703,6 @@
             
             .time-slots {
                 grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .calendar-grid {
-                min-width: 450px;
-            }
-            
-            .calendar-weekdays {
-                min-width: 450px;
-            }
-        }
-        
-        /* Calendar scrollbar styling */
-        .calendar-container::-webkit-scrollbar {
-            height: 6px;
-        }
-        
-        .calendar-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        
-        .calendar-container::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 10px;
-        }
-        
-        .calendar-container::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-        
-        /* Scroll hint for mobile */
-        @media (max-width: 768px) {
-            .calendar-container::after {
-                content: "→ Scroll →";
-                position: absolute;
-                right: 10px;
-                top: 50%;
-                transform: translateY(-50%);
-                font-size: 14px;
-                color: #2a5298;
-                opacity: 0.7;
-                background: rgba(255, 255, 255, 0.8);
-                padding: 5px 10px;
-                border-radius: 15px;
-                pointer-events: none;
-                animation: pulseHint 2s infinite;
-                font-weight: 600;
-            }
-            
-            @keyframes pulseHint {
-                0%, 100% { opacity: 0.5; transform: translateY(-50%) translateX(0); }
-                50% { opacity: 0.8; transform: translateY(-50%) translateX(-5px); }
             }
         }
     </style>
@@ -676,43 +751,46 @@
                         Select Date:
                     </label>
                     
-                    <div class="calendar-container">
-                        <!-- Weekday headers -->
-                        <div class="calendar-weekdays">
-                            <div class="weekday-header">Mon</div>
-                            <div class="weekday-header">Tue</div>
-                            <div class="weekday-header">Wed</div>
-                            <div class="weekday-header">Thu</div>
-                            <div class="weekday-header">Fri</div>
-                            <div class="weekday-header">Sat</div>
-                            <div class="weekday-header">Sun</div>
-                        </div>
-                        
-                        <!-- Calendar grid -->
-                        <div class="calendar-grid">
-                            {% for day in calendar_days %}
-                            <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %}"
-                                 data-date="{{ day.date.isoformat() }}"
-                                 onclick="selectDate('{{ day.date.isoformat() }}', this)">
-                                
-                                <div class="date-number">
-                                    {{ day.day }}
-                                </div>
-                                
-                                <div class="date-count">
-                                    {{ day.count }}/{{ day.max }}
-                                </div>
-                                
-                                <div class="date-status">
-                                    {{ day.status }}
-                                </div>
+                    <!-- Fixed Calendar Container -->
+                    <div class="calendar-scroll-container">
+                        <div class="calendar-wrapper">
+                            <!-- Weekday headers -->
+                            <div class="calendar-weekdays">
+                                <div class="weekday-header">Mon</div>
+                                <div class="weekday-header">Tue</div>
+                                <div class="weekday-header">Wed</div>
+                                <div class="weekday-header">Thu</div>
+                                <div class="weekday-header">Fri</div>
+                                <div class="weekday-header">Sat</div>
+                                <div class="weekday-header">Sun</div>
                             </div>
-                            {% endfor %}
                             
-                            <!-- Fill empty cells if needed (42 cells for 6 weeks) -->
-                            {% for i in range(42 - calendar_days|length) %}
-                            <div class="calendar-empty-cell"></div>
-                            {% endfor %}
+                            <!-- Calendar grid -->
+                            <div class="calendar-grid">
+                                {% for day in calendar_days %}
+                                <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %}"
+                                     data-date="{{ day.date.isoformat() }}"
+                                     onclick="selectDate('{{ day.date.isoformat() }}', this)">
+                                    
+                                    <div class="date-number">
+                                        {{ day.day }}
+                                    </div>
+                                    
+                                    <div class="date-count">
+                                        {{ day.count }}/{{ day.max }}
+                                    </div>
+                                    
+                                    <div class="date-status">
+                                        {{ day.status }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                
+                                <!-- Fill empty cells if needed (42 cells for 6 weeks) -->
+                                {% for i in range(42 - calendar_days|length) %}
+                                <div class="calendar-empty-cell"></div>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                     
@@ -729,6 +807,9 @@
                         <div class="legend-item">
                             <span class="legend-color full"></span>
                             <span>Full - Red</span>
+                        </div>
+                        <div class="legend-item" style="margin-top: 8px; font-size: 11px; color: #666; width: 100%; text-align: center;">
+                            <i class="fas fa-hand-point-right"></i> Swipe left/right to see more dates
                         </div>
                     </div>
                 </div>
@@ -852,6 +933,57 @@
         let selectedDate = null;
         let selectedTime = null;
         let selectedService = null;
+        
+        // Enhanced touch scrolling for mobile
+        function initCalendarTouchScroll() {
+            const calendarContainer = document.querySelector('.calendar-scroll-container');
+            if (!calendarContainer) return;
+            
+            let isScrolling = false;
+            let startX = 0;
+            let scrollLeft = 0;
+            
+            calendarContainer.addEventListener('touchstart', (e) => {
+                isScrolling = true;
+                startX = e.touches[0].pageX - calendarContainer.offsetLeft;
+                scrollLeft = calendarContainer.scrollLeft;
+            });
+            
+            calendarContainer.addEventListener('touchmove', (e) => {
+                if (!isScrolling) return;
+                e.preventDefault();
+                const x = e.touches[0].pageX - calendarContainer.offsetLeft;
+                const walk = (x - startX) * 2; // Multiply for faster scrolling
+                calendarContainer.scrollLeft = scrollLeft - walk;
+            });
+            
+            calendarContainer.addEventListener('touchend', () => {
+                isScrolling = false;
+            });
+            
+            // Also enable mouse drag for desktop testing
+            calendarContainer.addEventListener('mousedown', (e) => {
+                if (window.innerWidth <= 768) {
+                    isScrolling = true;
+                    startX = e.pageX - calendarContainer.offsetLeft;
+                    scrollLeft = calendarContainer.scrollLeft;
+                    calendarContainer.style.cursor = 'grabbing';
+                }
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isScrolling) return;
+                e.preventDefault();
+                const x = e.pageX - calendarContainer.offsetLeft;
+                const walk = (x - startX) * 2;
+                calendarContainer.scrollLeft = scrollLeft - walk;
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isScrolling = false;
+                calendarContainer.style.cursor = 'grab';
+            });
+        }
         
         function loadTimeSlots(date) {
             const container = document.getElementById('time-slots-container');
@@ -1036,12 +1168,34 @@
             }
         }
         
-        // Run on load and resize
-        window.addEventListener('load', updateCalendarForMobile);
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize calendar touch scrolling
+            initCalendarTouchScroll();
+            
+            // Update mobile display
+            updateCalendarForMobile();
+            
+            // Auto-scroll to today's date on mobile
+            const todayCell = document.querySelector('.calendar-day-cell.today');
+            if (todayCell && window.innerWidth <= 768) {
+                setTimeout(() => {
+                    todayCell.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }, 1000);
+            }
+            
+            // Add grab cursor to calendar on mobile
+            const calendarContainer = document.querySelector('.calendar-scroll-container');
+            if (calendarContainer && window.innerWidth <= 768) {
+                calendarContainer.style.cursor = 'grab';
+            }
+        });
+        
+        // Update on resize
         window.addEventListener('resize', updateCalendarForMobile);
         
-        // Initialize the first time
-        updateCalendarForMobile();
+        // Check points on load
+        checkPoints();
     </script>
 </body>
 </html>
