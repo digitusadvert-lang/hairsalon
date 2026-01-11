@@ -332,6 +332,39 @@
             box-shadow: none;
         }
         
+        /* OFF DAY CALENDAR CELL STYLING */
+        .calendar-day-cell.off-day {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            cursor: not-allowed;
+            opacity: 0.7;
+            position: relative;
+        }
+        
+        .calendar-day-cell.off-day:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .calendar-day-cell.off-day::after {
+            content: '✗';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            color: #dc3545;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .calendar-day-cell.off-day .date-number {
+            color: #6c757d;
+            text-decoration: line-through;
+        }
+        
+        .calendar-day-cell.off-day .date-status {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
         /* DAY DISPLAY IN GREEN BOX */
         .day-display {
             position: absolute;
@@ -845,7 +878,6 @@
                     </a>
                 </div>
             </div>
-            
         </div>
         
         <div style="padding: 30px;">
@@ -914,7 +946,7 @@
                         {% for day in calendar_days %}
                         <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %} {% if day.is_past_date %}past-date{% endif %}"
                              data-date="{{ day.date.isoformat() }}"
-                             {% if not day.is_past_date %}onclick="selectDate('{{ day.date.isoformat() }}', this)"{% endif %}>
+                             {% if not day.is_past_date and day.color != 'off-day' %}onclick="selectDate('{{ day.date.isoformat() }}', this)"{% endif %}>
                             
                             <!-- Day name inside the box -->
                             <div class="day-display">{{ day.day_name[:3] }}</div>
@@ -924,7 +956,11 @@
                             </div>
                             
                             <div class="date-count">
-                                {{ day.count }}/{{ day.max }}
+                                {% if day.color == 'off-day' %}
+                                    OFF DAY
+                                {% else %}
+                                    {{ day.count }}/{{ day.max }}
+                                {% endif %}
                             </div>
                             
                             <div class="date-status">
@@ -1159,38 +1195,67 @@
     </div>
     
     <script>
-        let selectedDate = null;
-        let selectedTime = null;
-        let appointmentToCancel = null;
-        let appointmentCancelTime = null;
-        
-        // Update current time display
-        function updateCurrentTime() {
-            const now = new Date();
-            const currentTimeElement = document.getElementById('current-time');
-            if (currentTimeElement) {
-                currentTimeElement.textContent = now.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
+        // Dashboard Application State
+        const DashboardApp = {
+            // State variables
+            selectedDate: null,
+            selectedTime: null,
+            appointmentToCancel: null,
+            appointmentCancelTime: null,
+            
+            // Initialize the dashboard
+            init() {
+                this.updateCurrentTime();
+                this.setupEventListeners();
+                this.markPastDates();
+                
+                // Update time every second
+                setInterval(() => this.updateCurrentTime(), 1000);
+                
+                // Check points periodically
+                setInterval(() => this.checkPoints(), 30000);
+                
+                // Mobile responsive adjustments
+                this.updateForMobile();
+                window.addEventListener('resize', () => this.updateForMobile());
+            },
+            
+            // Update current time display
+            updateCurrentTime() {
+                const now = new Date();
+                const currentTimeElement = document.getElementById('current-time');
+                if (currentTimeElement) {
+                    currentTimeElement.textContent = now.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                }
+            },
+            
+            // Setup event listeners
+            setupEventListeners() {
+                // Close modal when clicking outside
+                window.addEventListener('click', (event) => {
+                    const modal = document.getElementById('cancelModal');
+                    if (event.target === modal) {
+                        this.closeCancelModal();
+                    }
                 });
-            }
-        }
-        
-        // Update time every second
-        updateCurrentTime();
-        setInterval(updateCurrentTime, 1000);
-        
-        function loadTimeSlots(date) {
-            const container = document.getElementById('time-slots-container');
-            const now = new Date();
-            const selectedDateObj = new Date(date);
+            },
             
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #6c757d;"><i class="fas fa-spinner fa-spin"></i><br>Loading time slots...</div>';
-            
-            fetch(`/api/time-slots?date=${date}`)
-                .then(response => response.json())
-                .then(data => {
+            // Load time slots for selected date
+            async loadTimeSlots(date) {
+                const container = document.getElementById('time-slots-container');
+                const now = new Date();
+                const selectedDateObj = new Date(date);
+                
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #6c757d;"><i class="fas fa-spinner fa-spin"></i><br>Loading time slots...</div>';
+                
+                try {
+                    const response = await fetch(`/api/time-slots?date=${date}`);
+                    const data = await response.json();
+                    
                     if (data.error) {
                         container.innerHTML = `<div style="text-align: center; padding: 20px; color: #dc3545;">
                             <i class="fas fa-exclamation-circle"></i><br>${data.error}
@@ -1203,195 +1268,229 @@
                         return;
                     }
                     
-                    container.innerHTML = '';
-                    let hasAvailableSlots = false;
-                    
-                    data.time_slots.forEach(slot => {
-                        const slotTime = new Date(slot.datetime);
-                        const slotElement = document.createElement('div');
-                        
-                        // Check if slot is in the past
-                        const isPastSlot = slotTime < now;
-                        
-                        slotElement.className = isPastSlot ? 'time-slot past-time' : 'time-slot';
-                        slotElement.textContent = slot.time;
-                        slotElement.dataset.datetime = slot.datetime;
-                        
-                        if (!isPastSlot) {
-                            slotElement.onclick = () => selectTime(slot.datetime, slotElement);
-                            hasAvailableSlots = true;
-                        } else {
-                            slotElement.title = 'This time slot has passed';
-                        }
-                        
-                        container.appendChild(slotElement);
-                    });
-                    
-                    // If no available slots for today
-                    const isToday = selectedDateObj.toDateString() === now.toDateString();
-                    if (isToday && !hasAvailableSlots) {
-                        container.innerHTML += `
-                            <div style="grid-column: 1 / -1; text-align: center; padding: 15px; background: #fff3cd; border-radius: 8px; margin-top: 10px;">
-                                <i class="fas fa-info-circle"></i>
-                                <p style="margin: 5px 0 0 0; font-size: 13px;">
-                                    All time slots for today have passed. Please select a future date.
-                                </p>
-                            </div>
-                        `;
-                    }
-                })
-                .catch(error => {
+                    this.renderTimeSlots(container, data.time_slots, selectedDateObj);
+                } catch (error) {
                     container.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;"><i class="fas fa-exclamation-circle"></i><br>Error loading time slots.</div>';
-                    console.error(error);
-                });
-        }
-        
-        function selectTime(datetime, element) {
-            selectedTime = datetime;
-            
-            // Reset all time slots
-            document.querySelectorAll('.time-slot').forEach(slot => {
-                if (!slot.classList.contains('past-time')) {
-                    slot.classList.remove('selected');
-                    slot.style.background = '#e8f4fc';
-                    slot.style.color = 'inherit';
-                    slot.style.borderColor = '#b3e0ff';
+                    console.error('Error loading time slots:', error);
                 }
-            });
+            },
             
-            // Highlight selected time
-            element.classList.add('selected');
-            element.style.background = '#3498db';
-            element.style.color = 'white';
-            element.style.borderColor = '#2980b9';
-            
-            // Enable book button
-            const bookBtn = document.getElementById('book-btn');
-            bookBtn.disabled = false;
-            bookBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment (10 points)';
-        }
-        
-        function bookAppointment() {
-            if (!selectedDate || !selectedTime) {
-                showMessage('Please select both date and time', 'error');
-                return;
-            }
-            
-            const service = document.getElementById('service').value;
-            const bookBtn = document.getElementById('book-btn');
-            const messageDiv = document.getElementById('booking-message');
-            
-            const selectedDateTime = new Date(selectedTime);
-            const now = new Date();
-            
-            // Double-check that selected time is not in the past
-            if (selectedDateTime < now) {
-                showMessage('Cannot book past time slots. Please select a future time.', 'error');
-                return;
-            }
-            
-            const timeString = selectedDateTime.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            const dateString = selectedDateTime.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            
-            if (confirm(`Book ${service} on ${dateString} at ${timeString}?`)) {
-                bookBtn.disabled = true;
-                bookBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
-                messageDiv.innerHTML = '';
+            // Render time slots in the container
+            renderTimeSlots(container, timeSlots, selectedDate) {
+                const now = new Date();
+                container.innerHTML = '';
+                let hasAvailableSlots = false;
                 
-                const formData = new FormData();
-                formData.append('date', selectedDate);
-                formData.append('time', selectedTime);
-                formData.append('service', service);
-                
-                fetch('/book-appointment', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showMessage(data.message, 'success');
-                        bookBtn.innerHTML = '<i class="fas fa-check"></i> Appointment Booked!';
-                        
-                        // Update points display
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
+                timeSlots.forEach(slot => {
+                    const slotTime = new Date(slot.datetime);
+                    const slotElement = document.createElement('div');
+                    const isPastSlot = slotTime < now;
+                    
+                    slotElement.className = isPastSlot ? 'time-slot past-time' : 'time-slot';
+                    slotElement.textContent = slot.time;
+                    slotElement.dataset.datetime = slot.datetime;
+                    
+                    if (!isPastSlot) {
+                        slotElement.onclick = () => this.selectTime(slot.datetime, slotElement);
+                        hasAvailableSlots = true;
                     } else {
-                        showMessage(data.error, 'error');
-                        bookBtn.disabled = false;
-                        bookBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment (10 points)';
+                        slotElement.title = 'This time slot has passed';
                     }
-                })
-                .catch(error => {
-                    showMessage('Network error. Please try again.', 'error');
+                    
+                    container.appendChild(slotElement);
+                });
+                
+                // If no available slots for today
+                const isToday = selectedDate.toDateString() === now.toDateString();
+                if (isToday && !hasAvailableSlots) {
+                    container.innerHTML += `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 15px; background: #fff3cd; border-radius: 8px; margin-top: 10px;">
+                            <i class="fas fa-info-circle"></i>
+                            <p style="margin: 5px 0 0 0; font-size: 13px;">
+                                All time slots for today have passed. Please select a future date.
+                            </p>
+                        </div>
+                    `;
+                }
+            },
+            
+            // Select a time slot
+            selectTime(datetime, element) {
+                this.selectedTime = datetime;
+                
+                // Reset all time slots
+                document.querySelectorAll('.time-slot').forEach(slot => {
+                    if (!slot.classList.contains('past-time')) {
+                        slot.classList.remove('selected');
+                        slot.style.background = '#e8f4fc';
+                        slot.style.color = 'inherit';
+                        slot.style.borderColor = '#b3e0ff';
+                    }
+                });
+                
+                // Highlight selected time
+                element.classList.add('selected');
+                element.style.background = '#3498db';
+                element.style.color = 'white';
+                element.style.borderColor = '#2980b9';
+                
+                // Enable book button
+                this.updateBookButtonState();
+            },
+            
+            // Select a date
+            selectDate(date, element) {
+                // Check if date is an off-day
+                if (element.classList.contains('off-day')) {
+                    return;
+                }
+                
+                this.selectedDate = date;
+                
+                // Reset all calendar cells (except past dates and off-days)
+                document.querySelectorAll('.calendar-day-cell').forEach(day => {
+                    if (!day.classList.contains('past-date') && !day.classList.contains('off-day')) {
+                        day.classList.remove('selected');
+                        day.style.border = '2px solid transparent';
+                    }
+                });
+                
+                // Highlight selected date
+                element.classList.add('selected');
+                element.style.border = '2px solid #28a745';
+                
+                // Load time slots
+                this.loadTimeSlots(date);
+                
+                // Enable book button if time is already selected
+                this.updateBookButtonState();
+                
+                // Scroll into view on mobile
+                if (window.innerWidth <= 768) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            },
+            
+            // Update book button state
+            updateBookButtonState() {
+                const bookBtn = document.getElementById('book-btn');
+                if (this.selectedDate && this.selectedTime) {
                     bookBtn.disabled = false;
                     bookBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment (10 points)';
-                    console.error(error);
-                });
-            }
-        }
-        
-        function showMessage(text, type) {
-            const messageDiv = document.getElementById('booking-message');
-            messageDiv.innerHTML = `<div class="${type}">${text}</div>`;
-        }
-        
-        function copyReferralLink() {
-            const link = "{{ referral_url }}";
-            navigator.clipboard.writeText(link)
-                .then(() => {
-                    alert('Referral link copied to clipboard!');
-                })
-                .catch(err => {
-                    console.error('Failed to copy: ', err);
-                    alert('Failed to copy link. Please select and copy manually.');
-                });
-        }
-        
-        function selectDate(date, element) {
-            selectedDate = date;
-            
-            // Reset all calendar cells
-            document.querySelectorAll('.calendar-day-cell').forEach(day => {
-                if (!day.classList.contains('past-date')) {
-                    day.classList.remove('selected');
-                    day.style.border = '2px solid transparent';
                 }
-            });
+            },
             
-            // Highlight selected date
-            element.classList.add('selected');
-            element.style.border = '2px solid #28a745';
+            // Book appointment
+            async bookAppointment() {
+                if (!this.selectedDate || !this.selectedTime) {
+                    this.showMessage('Please select both date and time', 'error');
+                    return;
+                }
+                
+                const service = document.getElementById('service').value;
+                const bookBtn = document.getElementById('book-btn');
+                const selectedDateTime = new Date(this.selectedTime);
+                const now = new Date();
+                
+                // Double-check that selected time is not in the past
+                if (selectedDateTime < now) {
+                    this.showMessage('Cannot book past time slots. Please select a future time.', 'error');
+                    return;
+                }
+                
+                const timeString = selectedDateTime.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const dateString = selectedDateTime.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                if (confirm(`Book ${service} on ${dateString} at ${timeString}?`)) {
+                    bookBtn.disabled = true;
+                    bookBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
+                    
+                    const formData = new FormData();
+                    formData.append('date', this.selectedDate);
+                    formData.append('time', this.selectedTime);
+                    formData.append('service', service);
+                    
+                    try {
+                        const response = await fetch('/book-appointment', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            this.showMessage(data.message, 'success');
+                            bookBtn.innerHTML = '<i class="fas fa-check"></i> Appointment Booked!';
+                            
+                            // Reload page after 2 seconds
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            this.showMessage(data.error, 'error');
+                            bookBtn.disabled = false;
+                            bookBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment (10 points)';
+                        }
+                    } catch (error) {
+                        this.showMessage('Network error. Please try again.', 'error');
+                        bookBtn.disabled = false;
+                        bookBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment (10 points)';
+                        console.error('Booking error:', error);
+                    }
+                }
+            },
             
-            // Load time slots
-            loadTimeSlots(date);
+            // Show booking message
+            showMessage(text, type) {
+                const messageDiv = document.getElementById('booking-message');
+                messageDiv.innerHTML = `<div class="${type}">${text}</div>`;
+            },
             
-            // Enable book button if time is already selected
-            const bookBtn = document.getElementById('book-btn');
-            if (selectedTime) {
-                bookBtn.disabled = false;
-            }
+            // Copy referral link
+            copyReferralLink() {
+                const link = "{{ referral_url }}";
+                navigator.clipboard.writeText(link)
+                    .then(() => {
+                        alert('Referral link copied to clipboard!');
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy:', err);
+                        alert('Failed to copy link. Please select and copy manually.');
+                    });
+            },
             
-            // Scroll into view on mobile
-            if (window.innerWidth <= 768) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-        }
-        
-        // Check points periodically
-        function checkPoints() {
-            fetch('/api/check-points')
-                .then(response => response.json())
-                .then(data => {
+            // Mark past dates on calendar
+            markPastDates() {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                
+                document.querySelectorAll('.calendar-day-cell').forEach(cell => {
+                    const dateStr = cell.getAttribute('data-date');
+                    if (dateStr) {
+                        const cellDate = new Date(dateStr);
+                        const cellDateOnly = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
+                        
+                        // Check if date is in the past (and not already an off-day)
+                        if (cellDateOnly < today && !cell.classList.contains('off-day')) {
+                            cell.classList.add('past-date');
+                        }
+                    }
+                });
+            },
+            
+            // Check points balance
+            async checkPoints() {
+                try {
+                    const response = await fetch('/api/check-points');
+                    const data = await response.json();
+                    
                     const pointsBadge = document.getElementById('pointsBadge');
                     const currentPoints = document.getElementById('currentPoints');
                     if (pointsBadge) {
@@ -1400,229 +1499,235 @@
                     if (currentPoints) {
                         currentPoints.textContent = data.points;
                     }
-                });
-        }
-        
-        // Check points every 30 seconds
-        setInterval(checkPoints, 30000);
-        
-        // Mobile responsive adjustments
-        function updateForMobile() {
-            const calendarGrid = document.querySelector('.calendar-grid');
-            if (window.innerWidth <= 768 && calendarGrid) {
-                calendarGrid.style.gap = '5px';
-            }
-        }
-        
-        window.addEventListener('load', updateForMobile);
-        window.addEventListener('resize', updateForMobile);
-        
-        // Initial check for past dates
-        document.addEventListener('DOMContentLoaded', function() {
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            
-            document.querySelectorAll('.calendar-day-cell').forEach(cell => {
-                const dateStr = cell.getAttribute('data-date');
-                if (dateStr) {
-                    const cellDate = new Date(dateStr);
-                    const cellDateOnly = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
-                    
-                    // Check if date is in the past
-                    if (cellDateOnly < today) {
-                        cell.classList.add('past-date');
-                    }
+                } catch (error) {
+                    console.error('Error checking points:', error);
                 }
-            });
-        });
-        
-        // Cancel Appointment Functions
-        function openCancelModal(appointmentId, service, appointmentTimeStr) {
-            appointmentToCancel = appointmentId;
-            appointmentCancelTime = new Date(appointmentTimeStr);
-            const now = new Date();
-            const hoursUntilAppointment = (appointmentCancelTime - now) / (1000 * 60 * 60);
+            },
             
-            const timeString = appointmentCancelTime.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            const dateString = appointmentCancelTime.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+            // Mobile responsive adjustments
+            updateForMobile() {
+                const calendarGrid = document.querySelector('.calendar-grid');
+                if (window.innerWidth <= 768 && calendarGrid) {
+                    calendarGrid.style.gap = '5px';
+                }
+            },
             
-            let message = `<p>Are you sure you want to cancel your appointment?</p>
-                          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px;">
-                              <p><strong>Service:</strong> ${service}</p>
-                              <p><strong>Date:</strong> ${dateString}</p>
-                              <p><strong>Time:</strong> ${timeString}</p>
-                          </div>`;
-            
-            const warningBox = document.getElementById('timeWarningBox');
-            
-            if (hoursUntilAppointment < 2) {
-                // Within 2 hours - deduct 5 points
-                message += `<p style="margin-top: 15px; font-weight: 600; color: #dc3545;">
-                    <i class="fas fa-exclamation-triangle"></i> You're cancelling within 2 hours of your appointment.</p>`;
-                warningBox.style.display = 'block';
-            } else {
-                // More than 2 hours before - full refund
-                message += `<p style="margin-top: 15px; font-weight: 600; color: #28a745;">
-                    <i class="fas fa-check-circle"></i> You're cancelling more than 2 hours before your appointment. 10 points will be refunded.</p>`;
-                warningBox.style.display = 'none';
-            }
-            
-            document.getElementById('modalMessage').innerHTML = message;
-            document.getElementById('cancelModal').style.display = 'flex';
-        }
-        
-        function closeCancelModal() {
-            document.getElementById('cancelModal').style.display = 'none';
-            appointmentToCancel = null;
-            appointmentCancelTime = null;
-            document.getElementById('timeWarningBox').style.display = 'none';
-        }
-        
-        function confirmCancellation() {
-            if (!appointmentToCancel) return;
-            
-            const cancelBtn = document.querySelector('.modal-buttons .btn-danger');
-            const originalText = cancelBtn.innerHTML;
-            
-            // Show loading
-            cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
-            cancelBtn.disabled = true;
-            
-            fetch('/cancel-appointment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    appointment_id: appointmentToCancel
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    
-                    // Close modal
-                    closeCancelModal();
-                    
-                    // Update points display
-                    const pointsBadge = document.getElementById('pointsBadge');
-                    const currentPoints = document.getElementById('currentPoints');
-                    if (pointsBadge) {
-                        pointsBadge.innerHTML = `<i class="fas fa-coins"></i> ${data.new_points} Points`;
-                    }
-                    if (currentPoints) {
-                        currentPoints.textContent = data.new_points;
-                    }
-                    
-                    // Find and update the appointment in the list
-                    const appointmentItem = document.getElementById(`appointment-${appointmentToCancel}`);
-                    if (appointmentItem) {
-                        // Update status
-                        const statusBadge = appointmentItem.querySelector('.status-badge');
-                        if (statusBadge) {
-                            statusBadge.className = 'status-badge status-cancelled';
-                            statusBadge.textContent = 'Cancelled';
-                        }
-                        
-                        // Add cancellation info
-                        const now = new Date();
-                        const cancellationInfo = document.createElement('div');
-                        cancellationInfo.className = 'cancellation-info';
-                        cancellationInfo.innerHTML = `
-                            <i class="fas fa-times"></i>
-                            Cancelled: ${now.toLocaleString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })}
-                            <br>Refunded: ${data.points_refunded} points
-                        `;
-                        
-                        // Remove actions and add cancellation info
-                        const actions = appointmentItem.querySelector('.appointment-actions');
-                        if (actions) {
-                            actions.remove();
-                        }
-                        
-                        // Add cancellation info before the appointment details
-                        const details = appointmentItem.querySelector('.appointment-details');
-                        if (details) {
-                            appointmentItem.insertBefore(cancellationInfo, details.nextSibling);
-                        }
-                    }
+            // Cancel appointment functions
+            openCancelModal(appointmentId, service, appointmentTimeStr) {
+                this.appointmentToCancel = appointmentId;
+                this.appointmentCancelTime = new Date(appointmentTimeStr);
+                const now = new Date();
+                const hoursUntilAppointment = (this.appointmentCancelTime - now) / (1000 * 60 * 60);
+                
+                const timeString = this.appointmentCancelTime.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const dateString = this.appointmentCancelTime.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                let message = `<p>Are you sure you want to cancel your appointment?</p>
+                              <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                                  <p><strong>Service:</strong> ${service}</p>
+                                  <p><strong>Date:</strong> ${dateString}</p>
+                                  <p><strong>Time:</strong> ${timeString}</p>
+                              </div>`;
+                
+                const warningBox = document.getElementById('timeWarningBox');
+                
+                if (hoursUntilAppointment < 2) {
+                    // Within 2 hours - deduct 5 points
+                    message += `<p style="margin-top: 15px; font-weight: 600; color: #dc3545;">
+                        <i class="fas fa-exclamation-triangle"></i> You're cancelling within 2 hours of your appointment.</p>`;
+                    warningBox.style.display = 'block';
                 } else {
-                    showNotification(data.error, 'error');
+                    // More than 2 hours before - full refund
+                    message += `<p style="margin-top: 15px; font-weight: 600; color: #28a745;">
+                        <i class="fas fa-check-circle"></i> You're cancelling more than 2 hours before your appointment. 10 points will be refunded.</p>`;
+                    warningBox.style.display = 'none';
+                }
+                
+                document.getElementById('modalMessage').innerHTML = message;
+                document.getElementById('cancelModal').style.display = 'flex';
+            },
+            
+            closeCancelModal() {
+                document.getElementById('cancelModal').style.display = 'none';
+                this.appointmentToCancel = null;
+                this.appointmentCancelTime = null;
+                document.getElementById('timeWarningBox').style.display = 'none';
+            },
+            
+            async confirmCancellation() {
+                if (!this.appointmentToCancel) return;
+                
+                const cancelBtn = document.querySelector('.modal-buttons .btn-danger');
+                const originalText = cancelBtn.innerHTML;
+                
+                // Show loading
+                cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+                cancelBtn.disabled = true;
+                
+                try {
+                    const response = await fetch('/cancel-appointment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            appointment_id: this.appointmentToCancel
+                        })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showNotification(data.message, 'success');
+                        this.closeCancelModal();
+                        this.updatePointsDisplay(data.new_points);
+                        this.updateAppointmentUI(this.appointmentToCancel, data.points_refunded);
+                    } else {
+                        this.showNotification(data.error, 'error');
+                        cancelBtn.innerHTML = originalText;
+                        cancelBtn.disabled = false;
+                    }
+                } catch (error) {
+                    this.showNotification('Network error: ' + error, 'error');
                     cancelBtn.innerHTML = originalText;
                     cancelBtn.disabled = false;
                 }
-            })
-            .catch(error => {
-                showNotification('Network error: ' + error, 'error');
-                cancelBtn.innerHTML = originalText;
-                cancelBtn.disabled = false;
-            });
-        }
-        
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('cancelModal');
-            if (event.target == modal) {
-                closeCancelModal();
-            }
-        }
-        
-        // Notification function
-        function showNotification(message, type = 'success') {
-            // Remove any existing notifications
-            document.querySelectorAll('.custom-notification').forEach(el => el.remove());
+            },
             
-            // Create notification
-            const notification = document.createElement('div');
-            notification.className = `custom-notification ${type}`;
-            
-            // Set icon based on type
-            const icon = type === 'success' ? '✓' : '✗';
-            const title = type === 'success' ? 'Success!' : 'Error!';
-            
-            notification.innerHTML = `
-                <div style="display: flex; align-items: flex-start; gap: 12px;">
-                    <div style="font-size: 20px; margin-top: 2px;">${icon}</div>
-                    <div style="flex: 1;">
-                        <strong style="display: block; margin-bottom: 4px;">${title}</strong>
-                        <div style="font-size: 14px;">${message}</div>
-                    </div>
-                    <button type="button" onclick="this.parentElement.parentElement.remove()" 
-                            style="background: none; border: none; font-size: 16px; cursor: pointer; color: #666; padding: 0; margin: 0;">
-                        ×
-                    </button>
-                </div>
-            `;
-            
-            // Apply styles
-            notification.style.borderLeftColor = type === 'success' ? '#28a745' : '#dc3545';
-            notification.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
-            notification.style.color = type === 'success' ? '#155724' : '#721c24';
-            
-            document.body.appendChild(notification);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
+            updatePointsDisplay(newPoints) {
+                const pointsBadge = document.getElementById('pointsBadge');
+                const currentPoints = document.getElementById('currentPoints');
+                if (pointsBadge) {
+                    pointsBadge.innerHTML = `<i class="fas fa-coins"></i> ${newPoints} Points`;
                 }
-            }, 5000);
+                if (currentPoints) {
+                    currentPoints.textContent = newPoints;
+                }
+            },
+            
+            updateAppointmentUI(appointmentId, pointsRefunded) {
+                const appointmentItem = document.getElementById(`appointment-${appointmentId}`);
+                if (appointmentItem) {
+                    // Update status
+                    const statusBadge = appointmentItem.querySelector('.status-badge');
+                    if (statusBadge) {
+                        statusBadge.className = 'status-badge status-cancelled';
+                        statusBadge.textContent = 'Cancelled';
+                    }
+                    
+                    // Add cancellation info
+                    const now = new Date();
+                    const cancellationInfo = document.createElement('div');
+                    cancellationInfo.className = 'cancellation-info';
+                    cancellationInfo.innerHTML = `
+                        <i class="fas fa-times"></i>
+                        Cancelled: ${now.toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
+                        <br>Refunded: ${pointsRefunded} points
+                    `;
+                    
+                    // Remove actions and add cancellation info
+                    const actions = appointmentItem.querySelector('.appointment-actions');
+                    if (actions) {
+                        actions.remove();
+                    }
+                    
+                    // Add cancellation info before the appointment details
+                    const details = appointmentItem.querySelector('.appointment-details');
+                    if (details) {
+                        appointmentItem.insertBefore(cancellationInfo, details.nextSibling);
+                    }
+                }
+            },
+            
+            // Show notification
+            showNotification(message, type = 'success') {
+                // Remove any existing notifications
+                document.querySelectorAll('.custom-notification').forEach(el => el.remove());
+                
+                // Create notification
+                const notification = document.createElement('div');
+                notification.className = `custom-notification ${type}`;
+                
+                // Set icon based on type
+                const icon = type === 'success' ? '✓' : '✗';
+                const title = type === 'success' ? 'Success!' : 'Error!';
+                
+                notification.innerHTML = `
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="font-size: 20px; margin-top: 2px;">${icon}</div>
+                        <div style="flex: 1;">
+                            <strong style="display: block; margin-bottom: 4px;">${title}</strong>
+                            <div style="font-size: 14px;">${message}</div>
+                        </div>
+                        <button type="button" onclick="this.parentElement.parentElement.remove()" 
+                                style="background: none; border: none; font-size: 16px; cursor: pointer; color: #666; padding: 0; margin: 0;">
+                            ×
+                        </button>
+                    </div>
+                `;
+                
+                // Apply styles
+                notification.style.borderLeftColor = type === 'success' ? '#28a745' : '#dc3545';
+                notification.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
+                notification.style.color = type === 'success' ? '#155724' : '#721c24';
+                
+                document.body.appendChild(notification);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+        };
+        
+        // Global functions for onclick handlers
+        function selectDate(date, element) {
+            DashboardApp.selectDate(date, element);
         }
+        
+        function selectTime(datetime, element) {
+            DashboardApp.selectTime(datetime, element);
+        }
+        
+        function bookAppointment() {
+            DashboardApp.bookAppointment();
+        }
+        
+        function copyReferralLink() {
+            DashboardApp.copyReferralLink();
+        }
+        
+        function openCancelModal(appointmentId, service, appointmentTimeStr) {
+            DashboardApp.openCancelModal(appointmentId, service, appointmentTimeStr);
+        }
+        
+        function closeCancelModal() {
+            DashboardApp.closeCancelModal();
+        }
+        
+        function confirmCancellation() {
+            DashboardApp.confirmCancellation();
+        }
+        
+        // Initialize the dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            DashboardApp.init();
+        });
     </script>
 </body>
 </html>

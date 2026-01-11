@@ -66,6 +66,7 @@ class SalonSettings(db.Model):
     telegram_chat_id = db.Column(db.String(50), nullable=True)
     telegram_bot_token = db.Column(db.String(100), nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    off_days = db.relationship('OffDay', backref='salon_settings', lazy=True, cascade='all, delete-orphan')
 
 class TelegramChat(db.Model):
     __tablename__ = 'telegram_chat'
@@ -89,3 +90,48 @@ class PointsHistory(db.Model):
     reason = db.Column(db.String(255))
     changed_by = db.Column(db.String(50), default='admin')  # 'admin', 'system', 'appointment', etc.
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class OffDay(db.Model):
+    __tablename__ = 'off_days'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    salon_settings_id = db.Column(db.Integer, db.ForeignKey('salon_settings.id'))
+    
+    # Type can be: 'weekly' (every week on specific day) or 'specific' (specific dates)
+    type = db.Column(db.String(20), nullable=False, default='specific')
+    
+    # For weekly off days: day_of_week (0=Monday, 6=Sunday)
+    day_of_week = db.Column(db.Integer, nullable=True)
+    
+    # For specific off days: specific_date
+    specific_date = db.Column(db.Date, nullable=True)
+    
+    # Description/reason for off day
+    description = db.Column(db.String(200), nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        if self.type == 'weekly':
+            days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            return f"Weekly off: {days[self.day_of_week]}"
+        else:
+            return f"Specific off: {self.specific_date}"
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'type': self.type,
+            'day_of_week': self.day_of_week,
+            'specific_date': self.specific_date.isoformat() if self.specific_date else None,
+            'description': self.description,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+    
+    def get_day_name(self):
+        """Get day name for weekly off days"""
+        if self.type == 'weekly' and self.day_of_week is not None:
+            days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            return days[self.day_of_week]
+        return None

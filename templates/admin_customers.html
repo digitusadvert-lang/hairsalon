@@ -811,17 +811,13 @@
                     <p class="header-subtitle">View and manage all salon customers</p>
                 </div>
                 <div>
-                    <a href="{{ url_for('admin_dashboard') }}" class="dashboard-btn">
-                        <i class="fas fa-tachometer-alt"></i>
-                    </a>
+                    
                     <a href="{{ url_for('admin_logout') }}" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>
                 </div>
             </div>
-            <div class="admin-badge">
-                <i class="fas fa-users"></i>
-            </div>
+            
         </div>
         
         <!-- Navigation -->
@@ -840,6 +836,7 @@
                     <li><a href="{{ url_for('admin_settings') }}">
                         <i class="fas fa-cog"></i> Settings
                     </a></li>
+                    <li><a href="{{ url_for('admin_off_days') }}"><i class="fas fa-calendar-times"></i> Off Days</a></li>
                 </ul>
             </div>
         </nav>

@@ -1,12 +1,14 @@
-# app.py
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 from datetime import datetime, timedelta, date
 from collections import defaultdict
 import requests
 import json
+from sqlalchemy import text
 
-from models import db, Customer, Appointment, Referral, SalonSettings, TelegramChat, PointsHistory
+
+from models import db, Customer, Appointment, Referral, SalonSettings, TelegramChat, PointsHistory, OffDay
+
 from helpers import (
     generate_referral_code, normalize_phone_number, get_date_color,
     get_available_time_slots, award_referral_points, send_telegram_message,
@@ -763,20 +765,24 @@ def admin_dashboard():
     
     salon_settings = SalonSettings.query.first()
     
+    # Now these ORM queries should work since the database has been migrated
     total_customers = Customer.query.count()
     total_appointments = Appointment.query.count()
     pending_appointments = Appointment.query.filter_by(status='pending').count()
+    
+    today = date.today()
     today_appointments = Appointment.query.filter(
-        db.func.date(Appointment.appointment_time) == date.today()
+        db.func.date(Appointment.appointment_time) == today
     ).count()
     
+    # Get recent appointments with customer info
     recent_appointments = Appointment.query.options(
         db.joinedload(Appointment.customer)
     ).order_by(
         Appointment.appointment_time.desc()
     ).limit(10).all()
     
-    today = date.today()
+    # Get today's upcoming appointments
     upcoming_today = Appointment.query.options(
         db.joinedload(Appointment.customer)
     ).filter(
@@ -1404,6 +1410,189 @@ def test_phone():
     </body>
     </html>
     '''
+
+@app.route('/admin/off-days', methods=['GET', 'POST'])
+def admin_off_days():
+    """Manage off days"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login_page'))
+    
+    salon_settings = SalonSettings.query.first()
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'add_weekly':
+            day_of_week = int(request.form.get('day_of_week'))
+            description = request.form.get('description', '').strip()
+            
+            # Check if already exists
+            existing = OffDay.query.filter_by(
+                salon_settings_id=salon_settings.id,
+                type='weekly',
+                day_of_week=day_of_week
+            ).first()
+            
+            if not existing:
+                off_day = OffDay(
+                    salon_settings_id=salon_settings.id,
+                    type='weekly',
+                    day_of_week=day_of_week,
+                    description=description
+                )
+                db.session.add(off_day)
+                db.session.commit()
+                flash(f'Weekly off day added for {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"][day_of_week]}!', 'success')
+            else:
+                flash('This day is already marked as a weekly off day', 'warning')
+        
+        elif action == 'add_specific':
+            date_str = request.form.get('specific_date')
+            description = request.form.get('description', '').strip()
+            
+            try:
+                specific_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                
+                # Check if date is in the past
+                if specific_date < date.today():
+                    flash('Cannot add off days for past dates', 'error')
+                    return redirect(url_for('admin_off_days'))
+                
+                # Check if already exists
+                existing = OffDay.query.filter_by(
+                    salon_settings_id=salon_settings.id,
+                    type='specific',
+                    specific_date=specific_date
+                ).first()
+                
+                if not existing:
+                    off_day = OffDay(
+                        salon_settings_id=salon_settings.id,
+                        type='specific',
+                        specific_date=specific_date,
+                        description=description
+                    )
+                    db.session.add(off_day)
+                    db.session.commit()
+                    flash(f'Specific off day added for {specific_date.strftime("%B %d, %Y")}!', 'success')
+                else:
+                    flash('This date is already marked as an off day', 'warning')
+                    
+            except ValueError:
+                flash('Invalid date format', 'error')
+        
+        elif action == 'delete':
+            off_day_id = request.form.get('off_day_id')
+            off_day = db.session.get(OffDay, off_day_id)
+            
+            if off_day and off_day.salon_settings_id == salon_settings.id:
+                db.session.delete(off_day)
+                db.session.commit()
+                flash('Off day removed successfully!', 'success')
+            else:
+                flash('Off day not found', 'error')
+        
+        return redirect(url_for('admin_off_days'))
+    
+    # Get all off days
+    weekly_off_days = OffDay.query.filter_by(
+        salon_settings_id=salon_settings.id,
+        type='weekly'
+    ).order_by(OffDay.day_of_week).all()
+    
+    specific_off_days = OffDay.query.filter_by(
+        salon_settings_id=salon_settings.id,
+        type='specific'
+    ).order_by(OffDay.specific_date).all()
+    
+    # Get upcoming off days (next 60 days)
+    from datetime import timedelta
+    sixty_days_later = date.today() + timedelta(days=60)
+    upcoming_off_days = OffDay.query.filter(
+        OffDay.salon_settings_id == salon_settings.id,
+        OffDay.type == 'specific',
+        OffDay.specific_date >= date.today(),
+        OffDay.specific_date <= sixty_days_later
+    ).order_by(OffDay.specific_date).all()
+    
+    # Generate calendar preview for next 30 days
+    preview_calendar = []
+    for i in range(30):
+        day_date = date.today() + timedelta(days=i)
+        
+        # Check if this day is an off day
+        is_off_day = False
+        
+        # Check weekly off days
+        day_of_week = day_date.weekday()
+        weekly_off = OffDay.query.filter_by(
+            salon_settings_id=salon_settings.id,
+            type='weekly',
+            day_of_week=day_of_week
+        ).first()
+        
+        # Check specific off days
+        specific_off = OffDay.query.filter_by(
+            salon_settings_id=salon_settings.id,
+            type='specific',
+            specific_date=day_date
+        ).first()
+        
+        is_off_day = weekly_off is not None or specific_off is not None
+        
+        preview_calendar.append({
+            'date': day_date,
+            'is_off_day': is_off_day,
+            'is_today': day_date == date.today()
+        })
+    
+    return render_template('admin_off_days.html',
+        salon_settings=salon_settings,
+        weekly_off_days=weekly_off_days,
+        specific_off_days=specific_off_days,
+        upcoming_off_days=upcoming_off_days,
+        preview_calendar=preview_calendar,
+        today=date.today()
+    )
+
+@app.route('/api/check-off-day')
+def api_check_off_day():
+    """Check if a date is an off day"""
+    date_str = request.args.get('date')
+    
+    try:
+        check_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except:
+        return jsonify({'error': 'Invalid date format'})
+    
+    salon_settings = SalonSettings.query.first()
+    
+    # Check weekly off days
+    day_of_week = check_date.weekday()  # 0=Monday, 6=Sunday
+    weekly_off = OffDay.query.filter_by(
+        salon_settings_id=salon_settings.id,
+        type='weekly',
+        day_of_week=day_of_week
+    ).first()
+    
+    # Check specific off days
+    specific_off = OffDay.query.filter_by(
+        salon_settings_id=salon_settings.id,
+        type='specific',
+        specific_date=check_date
+    ).first()
+    
+    is_off_day = weekly_off is not None or specific_off is not None
+    
+    return jsonify({
+        'date': date_str,
+        'is_off_day': is_off_day,
+        'weekly_off': weekly_off.to_dict() if weekly_off else None,
+        'specific_off': specific_off.to_dict() if specific_off else None
+    })
+
+from sqlalchemy import text  # Add this import at the top of your file
+
 
 if __name__ == '__main__':
     port = 5008

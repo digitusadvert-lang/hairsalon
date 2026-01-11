@@ -1,5 +1,8 @@
 # helpers.py
 from datetime import datetime, timedelta
+from models import SalonSettings, OffDay
+from datetime import datetime, date, time, timedelta
+from sqlalchemy import func
 import random
 import string
 import requests
@@ -86,30 +89,94 @@ def normalize_phone_number(phone):
     print(f"DEBUG: Could not normalize phone: '{phone}'")
     return None
 
-def get_date_color(date):
-    # Example implementation
+def get_date_color(check_date):
+    """Get color coding for calendar dates"""
+    salon_settings = SalonSettings.query.first()
+    
+    # Check if it's an off day first
+    if is_off_day(check_date):
+        return 'off-day', 'OFF DAY', 0
+    
+    # Check if date is in the past
+    today = date.today()
+    if check_date < today:
+        return 'past-date', 'PASSED', 0
+    
+    # Get appointment count for this date
     appointment_count = Appointment.query.filter(
-        db.func.date(Appointment.appointment_time) == date,
+        func.date(Appointment.appointment_time) == check_date,
         Appointment.status.in_(['pending', 'confirmed'])
     ).count()
     
-    salon_settings = SalonSettings.query.first()
     max_appointments = salon_settings.max_daily_appointments
+    percentage = (appointment_count / max_appointments) * 100 if max_appointments > 0 else 0
     
-    if appointment_count >= max_appointments:
-        return ('full', 'Full', appointment_count)  # 'full' = class name
-    elif appointment_count >= max_appointments * 0.7:  # 70% full
-        return ('medium', 'Few Left', appointment_count)  # 'medium' = class name
+    # Determine color and status based on availability
+    if appointment_count == 0:
+        return 'available', 'AVAILABLE', appointment_count
+    elif percentage < 50:
+        return 'available', 'AVAILABLE', appointment_count
+    elif percentage < 80:
+        return 'medium', 'LIMITED', appointment_count
+    elif percentage < 100:
+        return 'full', 'FEW LEFT', appointment_count
     else:
-        return ('available', 'Available', appointment_count)  # 'available' = class name
+        return 'full', 'FULL', appointment_count
+
+def is_off_day(check_date):
+    """Check if a date is an off day"""
+    salon_settings = SalonSettings.query.first()
+    if not salon_settings:
+        return False
+    
+    # Check weekly off days
+    day_of_week = check_date.weekday()
+    weekly_off = OffDay.query.filter_by(
+        salon_settings_id=salon_settings.id,
+        type='weekly',
+        day_of_week=day_of_week
+    ).first()
+    
+    # Check specific off days
+    specific_off = OffDay.query.filter_by(
+        salon_settings_id=salon_settings.id,
+        type='specific',
+        specific_date=check_date
+    ).first()
+    
+    return weekly_off is not None or specific_off is not None
 
 def get_available_time_slots(date_obj):
-    """Get available time slots for a given date"""
-    from datetime import datetime, timedelta
+    """Get available time slots for a date"""
+    # Check if it's an off day
+    if is_off_day(date_obj):
+        return []
     
     salon_settings = SalonSettings.query.first()
     
     if not salon_settings:
+        return []
+    
+    # Check if it's an off day
+    day_of_week = date_obj.weekday()
+    
+    # Check weekly off days
+    weekly_off = OffDay.query.filter_by(
+        salon_settings_id=salon_settings.id,
+        type='weekly',
+        day_of_week=day_of_week
+    ).first()
+    
+    # Check specific off days
+    specific_off = OffDay.query.filter_by(
+        salon_settings_id=salon_settings.id,
+        type='specific',
+        specific_date=date_obj
+    ).first()
+    
+    # If it's an off day, return empty list
+    if weekly_off or specific_off:
+        print(f"DEBUG: {date_obj} is an off day")
         return []
     
     # Get buffer time (default 15 minutes)
@@ -149,6 +216,7 @@ def get_available_time_slots(date_obj):
     print(f"DEBUG: Working hours - Start: {start_time}, End: {end_time}")
     print(f"DEBUG: Appointment duration: {appointment_duration} minutes")
     print(f"DEBUG: Buffer time: {buffer} minutes")
+    print(f"DEBUG: Date: {date_obj}")
     
     while current_dt + timedelta(minutes=appointment_duration) <= end_dt:
         slot_end = current_dt + timedelta(minutes=appointment_duration)
