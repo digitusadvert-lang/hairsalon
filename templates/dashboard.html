@@ -257,7 +257,7 @@
             padding-right: 40px;
         }
         
-        /* Calendar Styles */
+        /* Calendar Styles - IMPROVED WITH DAY IN BOX */
         .calendar-weekdays {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -325,17 +325,32 @@
             background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
         }
         
-        .date-number {
-            font-size: 16px;
-            font-weight: 700;
+        /* DAY DISPLAY IN GREEN BOX */
+        .day-display {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-size: 10px;
+            font-weight: 600;
             color: #1a3a7a;
-            margin-bottom: 5px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 6px;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+        
+        .date-number {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1a3a7a;
+            margin-top: 10px;
         }
         
         .date-count {
             font-size: 11px;
             color: #6c757d;
             font-weight: 600;
+            margin-top: 5px;
         }
         
         .date-status {
@@ -343,7 +358,7 @@
             color: #6c757d;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-top: 2px;
+            margin-top: 5px;
         }
         
         /* Time Slots */
@@ -614,7 +629,12 @@
             }
             
             .date-number {
-                font-size: 14px;
+                font-size: 16px;
+            }
+            
+            .day-display {
+                font-size: 8px;
+                padding: 1px 4px;
             }
             
             .date-count,
@@ -753,6 +773,9 @@
                             <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %}"
                                  data-date="{{ day.date.isoformat() }}"
                                  onclick="selectDate('{{ day.date.isoformat() }}', this)">
+                                
+                                <!-- Day name inside the box -->
+                                <div class="day-display">{{ day.day_name[:3] }}</div>
                                 
                                 <div class="date-number">
                                     {{ day.day }}
