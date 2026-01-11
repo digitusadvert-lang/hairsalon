@@ -257,7 +257,7 @@
             padding-right: 40px;
         }
         
-        /* Calendar Styles - REMOVED WEEKDAY HEADERS */
+        /* Calendar Styles */
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -307,7 +307,18 @@
             background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
         }
         
-        /* DAY DISPLAY IN GREEN BOX - MADE MORE PROMINENT */
+        .calendar-day-cell.past-date {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%) !important;
+        }
+        
+        .calendar-day-cell.past-date:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* DAY DISPLAY IN GREEN BOX */
         .day-display {
             position: absolute;
             top: 5px;
@@ -375,6 +386,20 @@
             color: white !important;
             border-color: #2980b9 !important;
             box-shadow: 0 2px 10px rgba(52, 152, 219, 0.4) !important;
+        }
+        
+        .time-slot.past-time {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #f8f9fa !important;
+            border-color: #dee2e6 !important;
+            color: #6c757d !important;
+        }
+        
+        .time-slot.past-time:hover {
+            transform: none;
+            box-shadow: none;
+            background: #f8f9fa !important;
         }
         
         /* Appointment List */
@@ -556,7 +581,7 @@
             color: #721c24;
             padding: 12px 15px;
             border-radius: 8px;
-                    border: 1px solid #f5c6cb;
+            border: 1px solid #f5c6cb;
         }
         
         /* Customer Badge */
@@ -572,6 +597,23 @@
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+        
+        /* Current Time Indicator */
+        .current-time-indicator {
+            background: #fff3cd;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffc107;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .current-time-indicator i {
+            color: #856404;
         }
         
         /* Responsive Design */
@@ -671,9 +713,7 @@
                     </a>
                 </div>
             </div>
-            <div class="customer-badge">
-                <i class="fas fa-user-circle"></i> Member Since: {{ customer.created_at.strftime('%b %Y') }}
-            </div>
+            
         </div>
         
         <div style="padding: 30px;">
@@ -730,14 +770,21 @@
                 
                 <div class="form-group">
                     <label>Select Date</label>
-                    <!-- REMOVED THE WEEKDAY HEADERS COMPLETELY -->
+                    
+                    <!-- Current Time Indicator -->
+                    <div class="current-time-indicator" id="current-time-indicator">
+                        <i class="fas fa-clock"></i>
+                        <span>Current time: <span id="current-time"></span></span>
+                    </div>
+                    
+                    <!-- Calendar grid -->
                     <div class="calendar-grid">
                         {% for day in calendar_days %}
-                        <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %}"
+                        <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %} {% if day.is_past_date %}past-date{% endif %}"
                              data-date="{{ day.date.isoformat() }}"
-                             onclick="selectDate('{{ day.date.isoformat() }}', this)">
+                             {% if not day.is_past_date %}onclick="selectDate('{{ day.date.isoformat() }}', this)"{% endif %}>
                             
-                            <!-- Day name inside the box - FIXED: Display full day name -->
+                            <!-- Day name inside the box -->
                             <div class="day-display">{{ day.day_name[:3] }}</div>
                             
                             <div class="date-number">
@@ -749,7 +796,11 @@
                             </div>
                             
                             <div class="date-status">
-                                {{ day.status }}
+                                {% if day.is_past_date %}
+                                    PASSED
+                                {% else %}
+                                    {{ day.status }}
+                                {% endif %}
                             </div>
                         </div>
                         {% endfor %}
@@ -927,8 +978,28 @@
         let selectedDate = null;
         let selectedTime = null;
         
+        // Update current time display
+        function updateCurrentTime() {
+            const now = new Date();
+            const currentTimeElement = document.getElementById('current-time');
+            if (currentTimeElement) {
+                currentTimeElement.textContent = now.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            }
+        }
+        
+        // Update time every second
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 1000);
+        
         function loadTimeSlots(date) {
             const container = document.getElementById('time-slots-container');
+            const now = new Date();
+            const selectedDateObj = new Date(date);
+            
             container.innerHTML = '<div style="text-align: center; padding: 20px; color: #6c757d;"><i class="fas fa-spinner fa-spin"></i><br>Loading time slots...</div>';
             
             fetch(`/api/time-slots?date=${date}`)
@@ -947,14 +1018,41 @@
                     }
                     
                     container.innerHTML = '';
+                    let hasAvailableSlots = false;
+                    
                     data.time_slots.forEach(slot => {
+                        const slotTime = new Date(slot.datetime);
                         const slotElement = document.createElement('div');
-                        slotElement.className = 'time-slot';
+                        
+                        // Check if slot is in the past
+                        const isPastSlot = slotTime < now;
+                        
+                        slotElement.className = isPastSlot ? 'time-slot past-time' : 'time-slot';
                         slotElement.textContent = slot.time;
                         slotElement.dataset.datetime = slot.datetime;
-                        slotElement.onclick = () => selectTime(slot.datetime, slotElement);
+                        
+                        if (!isPastSlot) {
+                            slotElement.onclick = () => selectTime(slot.datetime, slotElement);
+                            hasAvailableSlots = true;
+                        } else {
+                            slotElement.title = 'This time slot has passed';
+                        }
+                        
                         container.appendChild(slotElement);
                     });
+                    
+                    // If no available slots for today
+                    const isToday = selectedDateObj.toDateString() === now.toDateString();
+                    if (isToday && !hasAvailableSlots) {
+                        container.innerHTML += `
+                            <div style="grid-column: 1 / -1; text-align: center; padding: 15px; background: #fff3cd; border-radius: 8px; margin-top: 10px;">
+                                <i class="fas fa-info-circle"></i>
+                                <p style="margin: 5px 0 0 0; font-size: 13px;">
+                                    All time slots for today have passed. Please select a future date.
+                                </p>
+                            </div>
+                        `;
+                    }
                 })
                 .catch(error => {
                     container.innerHTML = '<div style="text-align: center; padding: 20px; color: #dc3545;"><i class="fas fa-exclamation-circle"></i><br>Error loading time slots.</div>';
@@ -967,10 +1065,12 @@
             
             // Reset all time slots
             document.querySelectorAll('.time-slot').forEach(slot => {
-                slot.classList.remove('selected');
-                slot.style.background = '#e8f4fc';
-                slot.style.color = 'inherit';
-                slot.style.borderColor = '#b3e0ff';
+                if (!slot.classList.contains('past-time')) {
+                    slot.classList.remove('selected');
+                    slot.style.background = '#e8f4fc';
+                    slot.style.color = 'inherit';
+                    slot.style.borderColor = '#b3e0ff';
+                }
             });
             
             // Highlight selected time
@@ -995,7 +1095,27 @@
             const bookBtn = document.getElementById('book-btn');
             const messageDiv = document.getElementById('booking-message');
             
-            if (confirm(`Book ${service} on ${new Date(selectedDate).toLocaleDateString()} at ${selectedTime.split('T')[1].slice(0,5)}?`)) {
+            const selectedDateTime = new Date(selectedTime);
+            const now = new Date();
+            
+            // Double-check that selected time is not in the past
+            if (selectedDateTime < now) {
+                showMessage('Cannot book past time slots. Please select a future time.', 'error');
+                return;
+            }
+            
+            const timeString = selectedDateTime.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const dateString = selectedDateTime.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            if (confirm(`Book ${service} on ${dateString} at ${timeString}?`)) {
                 bookBtn.disabled = true;
                 bookBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
                 messageDiv.innerHTML = '';
@@ -1056,8 +1176,10 @@
             
             // Reset all calendar cells
             document.querySelectorAll('.calendar-day-cell').forEach(day => {
-                day.classList.remove('selected');
-                day.style.border = '2px solid transparent';
+                if (!day.classList.contains('past-date')) {
+                    day.classList.remove('selected');
+                    day.style.border = '2px solid transparent';
+                }
             });
             
             // Highlight selected date
@@ -1104,6 +1226,25 @@
         
         window.addEventListener('load', updateForMobile);
         window.addEventListener('resize', updateForMobile);
+        
+        // Initial check for past dates
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            document.querySelectorAll('.calendar-day-cell').forEach(cell => {
+                const dateStr = cell.getAttribute('data-date');
+                if (dateStr) {
+                    const cellDate = new Date(dateStr);
+                    const cellDateOnly = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
+                    
+                    // Check if date is in the past
+                    if (cellDateOnly < today) {
+                        cell.classList.add('past-date');
+                    }
+                }
+            });
+        });
     </script>
 </body>
 </html>
