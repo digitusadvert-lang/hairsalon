@@ -58,7 +58,7 @@ with app.app_context():
         print("🔗 Attempting to set Telegram webhook...")
         
         # You might want to use ngrok URL here for local development
-        webhook_url = f"https://cushier-thigmotactic-donny.ngrok-free.dev/telegram-webhook"
+        webhook_url = f"https://hairsalon-1560.onrender.com/telegram-webhook"
         
         try:
             url = f"https://api.telegram.org/bot{salon_settings.telegram_bot_token}/setWebhook"
