@@ -257,25 +257,7 @@
             padding-right: 40px;
         }
         
-        /* Calendar Styles - IMPROVED WITH DAY IN BOX */
-        .calendar-weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            background: #f8fafc;
-            border-radius: 8px 8px 0 0;
-            margin-bottom: 10px;
-            padding: 12px 0;
-        }
-        
-        .weekday-header {
-            text-align: center;
-            font-weight: 600;
-            color: #1a3a7a;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
+        /* Calendar Styles - REMOVED WEEKDAY HEADERS */
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -325,32 +307,34 @@
             background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
         }
         
-        /* DAY DISPLAY IN GREEN BOX */
+        /* DAY DISPLAY IN GREEN BOX - MADE MORE PROMINENT */
         .day-display {
             position: absolute;
             top: 5px;
             left: 5px;
-            font-size: 10px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
             color: #1a3a7a;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 2px 6px;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 3px 8px;
+            border-radius: 12px;
             text-transform: uppercase;
+            border: 1px solid rgba(0,0,0,0.1);
         }
         
         .date-number {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 800;
             color: #1a3a7a;
-            margin-top: 10px;
+            margin-top: 15px;
+            margin-bottom: 5px;
         }
         
         .date-count {
             font-size: 11px;
             color: #6c757d;
             font-weight: 600;
-            margin-top: 5px;
+            margin-bottom: 5px;
         }
         
         .date-status {
@@ -358,7 +342,6 @@
             color: #6c757d;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-top: 5px;
         }
         
         /* Time Slots */
@@ -573,7 +556,7 @@
             color: #721c24;
             padding: 12px 15px;
             border-radius: 8px;
-            border: 1px solid #f5c6cb;
+                    border: 1px solid #f5c6cb;
         }
         
         /* Customer Badge */
@@ -633,8 +616,8 @@
             }
             
             .day-display {
-                font-size: 8px;
-                padding: 1px 4px;
+                font-size: 9px;
+                padding: 2px 5px;
             }
             
             .date-count,
@@ -665,14 +648,6 @@
             .btn {
                 width: 100%;
                 justify-content: center;
-            }
-            
-            .calendar-weekdays {
-                padding: 8px 0;
-            }
-            
-            .weekday-header {
-                font-size: 11px;
             }
         }
     </style>
@@ -755,42 +730,29 @@
                 
                 <div class="form-group">
                     <label>Select Date</label>
-                    <div class="calendar-container">
-                        <!-- Weekday headers -->
-                        <div class="calendar-weekdays">
-                            <div class="weekday-header">Mon</div>
-                            <div class="weekday-header">Tue</div>
-                            <div class="weekday-header">Wed</div>
-                            <div class="weekday-header">Thu</div>
-                            <div class="weekday-header">Fri</div>
-                            <div class="weekday-header">Sat</div>
-                            <div class="weekday-header">Sun</div>
-                        </div>
-                        
-                        <!-- Calendar grid -->
-                        <div class="calendar-grid">
-                            {% for day in calendar_days %}
-                            <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %}"
-                                 data-date="{{ day.date.isoformat() }}"
-                                 onclick="selectDate('{{ day.date.isoformat() }}', this)">
-                                
-                                <!-- Day name inside the box -->
-                                <div class="day-display">{{ day.day_name[:3] }}</div>
-                                
-                                <div class="date-number">
-                                    {{ day.day }}
-                                </div>
-                                
-                                <div class="date-count">
-                                    {{ day.count }}/{{ day.max }}
-                                </div>
-                                
-                                <div class="date-status">
-                                    {{ day.status }}
-                                </div>
+                    <!-- REMOVED THE WEEKDAY HEADERS COMPLETELY -->
+                    <div class="calendar-grid">
+                        {% for day in calendar_days %}
+                        <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %}"
+                             data-date="{{ day.date.isoformat() }}"
+                             onclick="selectDate('{{ day.date.isoformat() }}', this)">
+                            
+                            <!-- Day name inside the box - FIXED: Display full day name -->
+                            <div class="day-display">{{ day.day_name[:3] }}</div>
+                            
+                            <div class="date-number">
+                                {{ day.day }}
                             </div>
-                            {% endfor %}
+                            
+                            <div class="date-count">
+                                {{ day.count }}/{{ day.max }}
+                            </div>
+                            
+                            <div class="date-status">
+                                {{ day.status }}
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
                 
