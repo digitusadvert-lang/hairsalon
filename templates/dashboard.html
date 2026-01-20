@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Dashboard - HS Salon</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}" media="(max-width: 768px)">
     <style>
         * {
             margin: 0;
@@ -942,37 +943,39 @@
                     </div>
                     
                     <!-- Calendar grid -->
-                    <div class="calendar-grid">
-                        {% for day in calendar_days %}
-                        <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %} {% if day.is_past_date %}past-date{% endif %}"
-                             data-date="{{ day.date.isoformat() }}"
-                             {% if not day.is_past_date and day.color != 'off-day' %}onclick="selectDate('{{ day.date.isoformat() }}', this)"{% endif %}>
-                            
-                            <!-- Day name inside the box -->
-                            <div class="day-display">{{ day.day_name[:3] }}</div>
-                            
-                            <div class="date-number">
-                                {{ day.day }}
+                    <div class="calendar-container"> <!-- ADD THIS LINE -->
+                        <div class="calendar-grid">
+                            {% for day in calendar_days %}
+                            <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %} {% if day.is_past_date %}past-date{% endif %}"
+                                 data-date="{{ day.date.isoformat() }}"
+                                 {% if not day.is_past_date and day.color != 'off-day' %}onclick="selectDate('{{ day.date.isoformat() }}', this)"{% endif %}>
+            
+                                <!-- Day name inside the box -->
+                                <div class="day-display">{{ day.day_name[:3] }}</div>
+            
+                                <div class="date-number">
+                                    {{ day.day }}
+                                </div>
+            
+                                <div class="date-count">
+                                    {% if day.color == 'off-day' %}
+                                        OFF DAY
+                                    {% else %}
+                                        {{ day.count }}/{{ day.max }}
+                                    {% endif %}
+                                </div>
+            
+                                <div class="date-status">
+                                    {% if day.is_past_date %}
+                                        PASSED
+                                    {% else %}
+                                        {{ day.status }}
+                                    {% endif %}
+                                </div>
                             </div>
-                            
-                            <div class="date-count">
-                                {% if day.color == 'off-day' %}
-                                    OFF DAY
-                                {% else %}
-                                    {{ day.count }}/{{ day.max }}
-                                {% endif %}
-                            </div>
-                            
-                            <div class="date-status">
-                                {% if day.is_past_date %}
-                                    PASSED
-                                {% else %}
-                                    {{ day.status }}
-                                {% endif %}
-                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
-                    </div>
+                    </div> <!-- ADD THIS LINE -->
                 </div>
                 
                 <div class="form-group">
