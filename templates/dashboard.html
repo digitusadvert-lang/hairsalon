@@ -273,17 +273,88 @@
         }
         
         /* Calendar Styles */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .month-navigation {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .month-navigation h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a3a7a;
+            min-width: 180px;
+            text-align: center;
+        }
+        
+        .nav-button {
+            padding: 8px 15px;
+            background: #2a5298;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .nav-button:hover {
+            background: #1a3a7a;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .nav-button.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            background: #6c757d;
+        }
+        
+        .today-button {
+            background: #28a745;
+        }
+        
+        .today-button:hover {
+            background: #218838;
+        }
+        
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 700;
+            color: #1a3a7a;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
         }
         
         .calendar-day-cell {
             aspect-ratio: 1;
             border: 2px solid transparent;
             border-radius: 8px;
-            padding: 10px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -333,7 +404,6 @@
             box-shadow: none;
         }
         
-        /* OFF DAY CALENDAR CELL STYLING */
         .calendar-day-cell.off-day {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             cursor: not-allowed;
@@ -361,31 +431,17 @@
             text-decoration: line-through;
         }
         
-        .calendar-day-cell.off-day .date-status {
-            color: #dc3545;
-            font-weight: bold;
-        }
-        
-        /* DAY DISPLAY IN GREEN BOX */
-        .day-display {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            font-size: 11px;
-            font-weight: 700;
-            color: #1a3a7a;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 3px 8px;
-            border-radius: 12px;
-            text-transform: uppercase;
-            border: 1px solid rgba(0,0,0,0.1);
+        .calendar-day-cell.other-month {
+            opacity: 0.3;
+            pointer-events: none;
+            background: #f8f9fa;
         }
         
         .date-number {
             font-size: 20px;
             font-weight: 800;
             color: #1a3a7a;
-            margin-top: 15px;
+            margin-top: 10px;
             margin-bottom: 5px;
         }
         
@@ -774,6 +830,47 @@
             }
         }
         
+        /* Calendar Legend */
+        .calendar-legend {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        .legend-color.available {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+        
+        .legend-color.medium {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        }
+        
+        .legend-color.full {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        }
+        
+        .legend-color.off-day {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        
         /* Responsive Design */
         @media (max-width: 768px) {
             .container {
@@ -803,21 +900,32 @@
                 gap: 15px;
             }
             
+            .month-navigation {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .month-navigation h3 {
+                min-width: auto;
+                order: -1;
+            }
+            
             .calendar-grid {
-                gap: 5px;
+                gap: 4px;
+            }
+            
+            .calendar-day-header {
+                font-size: 11px;
+                padding: 5px;
             }
             
             .calendar-day-cell {
-                padding: 5px;
+                padding: 4px;
             }
             
             .date-number {
                 font-size: 16px;
-            }
-            
-            .day-display {
-                font-size: 9px;
-                padding: 2px 5px;
+                margin-top: 5px;
             }
             
             .date-count,
@@ -826,7 +934,7 @@
             }
             
             .time-slots {
-                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
             }
             
             .customer-badge {
@@ -842,6 +950,11 @@
             .modal-buttons {
                 flex-direction: column;
             }
+            
+            .calendar-legend {
+                flex-direction: column;
+                gap: 8px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -856,6 +969,11 @@
             .btn {
                 width: 100%;
                 justify-content: center;
+            }
+            
+            .nav-button {
+                padding: 6px 12px;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -942,21 +1060,51 @@
                         <span>Current time: <span id="current-time"></span></span>
                     </div>
                     
-                    <!-- Calendar grid -->
-                    <div class="calendar-container"> <!-- ADD THIS LINE -->
+                    <!-- Calendar Navigation -->
+                    <div class="calendar-header">
+                        <div class="month-navigation">
+                            <a href="{{ url_for('dashboard', year=prev_month.year, month=prev_month.month) }}" class="nav-button">
+                                <i class="fas fa-chevron-left"></i> {{ prev_month.strftime('%b') }}
+                            </a>
+                            <h3>{{ current_month }}</h3>
+                            <a href="{{ url_for('dashboard', year=next_month.year, month=next_month.month) }}" class="nav-button">
+                                {{ next_month.strftime('%b') }} <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </div>
+                        <a href="{{ url_for('dashboard') }}" class="nav-button today-button">
+                            <i class="fas fa-calendar-day"></i> Today
+                        </a>
+                    </div>
+                    
+                    <!-- Calendar Grid with Day Headers -->
+                    <div class="calendar-container">
                         <div class="calendar-grid">
+                            <!-- Day Headers -->
+                            <div class="calendar-day-header">Mon</div>
+                            <div class="calendar-day-header">Tue</div>
+                            <div class="calendar-day-header">Wed</div>
+                            <div class="calendar-day-header">Thu</div>
+                            <div class="calendar-day-header">Fri</div>
+                            <div class="calendar-day-header">Sat</div>
+                            <div class="calendar-day-header">Sun</div>
+                            
+                            <!-- Calendar Days -->
                             {% for day in calendar_days %}
-                            <div class="calendar-day-cell {{ day.color }} {% if day.is_today %}today{% endif %} {% if day.is_past_date %}past-date{% endif %}"
+                            <div class="calendar-day-cell 
+                                        {{ day.color }} 
+                                        {% if day.is_today %}today{% endif %} 
+                                        {% if day.is_past_date %}past-date{% endif %}
+                                        {% if not day.is_current_month %}other-month{% endif %}"
                                  data-date="{{ day.date.isoformat() }}"
-                                 {% if not day.is_past_date and day.color != 'off-day' %}onclick="selectDate('{{ day.date.isoformat() }}', this)"{% endif %}>
-            
-                                <!-- Day name inside the box -->
-                                <div class="day-display">{{ day.day_name[:3] }}</div>
-            
+                                 data-month="{{ day.month }}"
+                                 data-year="{{ day.year }}"
+                                 {% if day.is_current_month and not day.is_past_date and day.color != 'off-day' %}onclick="selectDate('{{ day.date.isoformat() }}', this)"{% endif %}>
+                                
                                 <div class="date-number">
                                     {{ day.day }}
                                 </div>
-            
+                                
+                                {% if day.is_current_month %}
                                 <div class="date-count">
                                     {% if day.color == 'off-day' %}
                                         OFF DAY
@@ -964,7 +1112,7 @@
                                         {{ day.count }}/{{ day.max }}
                                     {% endif %}
                                 </div>
-            
+                                
                                 <div class="date-status">
                                     {% if day.is_past_date %}
                                         PASSED
@@ -972,10 +1120,34 @@
                                         {{ day.status }}
                                     {% endif %}
                                 </div>
+                                {% else %}
+                                <div class="date-count">&nbsp;</div>
+                                <div class="date-status">&nbsp;</div>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         </div>
-                    </div> <!-- ADD THIS LINE -->
+                    </div>
+                    
+                    <!-- Calendar Legend -->
+                    <div class="calendar-legend">
+                        <div class="legend-item">
+                            <span class="legend-color available"></span>
+                            <span>Available (< 50%)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color medium"></span>
+                            <span>Medium (50-80%)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color full"></span>
+                            <span>Full (>80%)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color off-day"></span>
+                            <span>Off Day</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -1221,6 +1393,23 @@
                 // Mobile responsive adjustments
                 this.updateForMobile();
                 window.addEventListener('resize', () => this.updateForMobile());
+                
+                // Check for selected date from URL params
+                this.checkUrlParams();
+            },
+            
+            // Check URL parameters for date selection
+            checkUrlParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const selectedDate = urlParams.get('selected_date');
+                if (selectedDate) {
+                    const dateCell = document.querySelector(`[data-date="${selectedDate}"]`);
+                    if (dateCell && !dateCell.classList.contains('past-date') && !dateCell.classList.contains('off-day')) {
+                        setTimeout(() => {
+                            this.selectDate(selectedDate, dateCell);
+                        }, 500);
+                    }
+                }
             },
             
             // Update current time display
@@ -1352,7 +1541,7 @@
                 
                 // Reset all calendar cells (except past dates and off-days)
                 document.querySelectorAll('.calendar-day-cell').forEach(day => {
-                    if (!day.classList.contains('past-date') && !day.classList.contains('off-day')) {
+                    if (!day.classList.contains('past-date') && !day.classList.contains('off-day') && !day.classList.contains('other-month')) {
                         day.classList.remove('selected');
                         day.style.border = '2px solid transparent';
                     }

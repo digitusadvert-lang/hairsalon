@@ -339,11 +339,40 @@ def dashboard():
     salon_settings = SalonSettings.query.first()
     max_appointments = salon_settings.max_daily_appointments
     
-    today = date.today()
-    calendar_days = []
+    # Get month from query parameter, default to current month
+    year = request.args.get('year', type=int)
+    month = request.args.get('month', type=int)
     
-    for i in range(35):
-        day_date = today + timedelta(days=i)
+    today = date.today()
+    if year and month:
+        # Navigate to specified month
+        current_date = date(year, month, 1)
+    else:
+        current_date = today
+    
+    # Calculate first day of the month and last day
+    if current_date.month == 12:
+        next_month = date(current_date.year + 1, 1, 1)
+    else:
+        next_month = date(current_date.year, current_date.month + 1, 1)
+    
+    last_day_of_month = next_month - timedelta(days=1)
+    
+    # Find the first day to display (might include days from previous month)
+    first_display_date = current_date.replace(day=1)
+    # Adjust to start from Monday (0 = Monday, 6 = Sunday)
+    while first_display_date.weekday() != 0:  # 0 = Monday
+        first_display_date -= timedelta(days=1)
+    
+    # Generate 42 days (6 weeks) to ensure full calendar
+    calendar_days = []
+    for i in range(42):
+        day_date = first_display_date + timedelta(days=i)
+        
+        # Determine if this day is in the current month
+        is_current_month = (day_date.month == current_date.month and 
+                           day_date.year == current_date.year)
+        
         color, status, count = get_date_color(day_date)
         calendar_days.append({
             'date': day_date,
@@ -358,7 +387,8 @@ def dashboard():
             'max': max_appointments,
             'available': count < max_appointments,
             'is_today': day_date == today,
-            'is_past': False
+            'is_current_month': is_current_month,
+            'is_past': day_date < today and not is_current_month
         })
     
     services = ['Haircut', 'Coloring', 'Hair Treatment', 'Styling', 'Perm']
@@ -379,6 +409,17 @@ def dashboard():
         customer_id=customer.id
     ).order_by(Appointment.appointment_time.desc()).all()
     
+    # Calculate previous and next month for navigation
+    if current_date.month == 1:
+        prev_month = date(current_date.year - 1, 12, 1)
+    else:
+        prev_month = date(current_date.year, current_date.month - 1, 1)
+    
+    if current_date.month == 12:
+        next_month = date(current_date.year + 1, 1, 1)
+    else:
+        next_month = date(current_date.year, current_date.month + 1, 1)
+    
     return render_template('dashboard.html',
         customer=customer,
         calendar_days=calendar_days,
@@ -387,7 +428,12 @@ def dashboard():
         pending_referrals=pending_referrals,
         referral_url=referral_url,
         appointments=customer_appointments[:5],
-        TELEGRAM_BOT_LINK=app.config['TELEGRAM_BOT_LINK']
+        TELEGRAM_BOT_LINK=app.config['TELEGRAM_BOT_LINK'],
+        current_month=current_date.strftime('%B %Y'),
+        current_year=current_date.year,
+        current_month_num=current_date.month,
+        prev_month=prev_month,
+        next_month=next_month
     )
 
 @app.route('/api/time-slots')
