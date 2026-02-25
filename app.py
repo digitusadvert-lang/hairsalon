@@ -7,7 +7,7 @@ import json
 from sqlalchemy import text
 
 
-from models import db, Customer, Appointment, Referral, SalonSettings, TelegramChat, PointsHistory, OffDay
+from models import db, Customer, Appointment, Referral, SalonSettings, TelegramChat, PointsHistory, OffDay, Service
 
 from helpers import (
     generate_referral_code, normalize_phone_number, get_date_color,
@@ -47,6 +47,29 @@ with app.app_context():
             default_settings = SalonSettings()
             db.session.add(default_settings)
             db.session.commit()
+
+        # Create services table and add defaults if none exist
+        try:
+            if not Service.query.first():
+                print("📋 Adding default services...")
+                default_services = [
+                    Service(name='Haircut', duration=45, description='Professional haircut service', price=45.00),
+                    Service(name='Hair Coloring', duration=120, description='Full hair coloring', price=120.00),
+                    Service(name='Hair Treatment', duration=60, description='Deep conditioning treatment', price=80.00),
+                    Service(name='Styling', duration=45, description='Blow dry and styling', price=50.00),
+                    Service(name='Perm', duration=150, description='Professional perming service', price=200.00),
+                    Service(name='Highlights', duration=120, description='Foil highlights', price=150.00),
+                    Service(name="Men's Cut", duration=30, description="Quick men's haircut", price=35.00),
+                    Service(name="Children's Cut", duration=30, description='Haircut for children under 12', price=30.00),
+                ]
+                
+                for service in default_services:
+                    db.session.add(service)
+                
+                db.session.commit()
+                print("✅ Default services added!")
+        except Exception as e:
+            print(f"⚠️  Note: Services table setup: {e}")
 
         print("✅ Database ready!")
 
@@ -391,7 +414,8 @@ def dashboard():
             'is_past': day_date < today and not is_current_month
         })
     
-    services = ['Haircut', 'Coloring', 'Hair Treatment', 'Styling', 'Perm']
+    # Get all active services from database
+    services = Service.query.filter_by(is_active=True).order_by(Service.name).all()
     
     successful_referrals = Referral.query.filter_by(
         referrer_id=customer.id,
@@ -438,7 +462,7 @@ def dashboard():
 
 @app.route('/api/time-slots')
 def api_time_slots():
-    """Get available time slots for date"""
+    """Get available time slots for date (legacy)"""
     date_str = request.args.get('date')
     try:
         date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -460,6 +484,42 @@ def api_time_slots():
         } for slot in time_slots]
     })
 
+@app.route('/api/service-time-slots')
+def api_service_time_slots():
+    """Get available time slots for a specific service"""
+    date_str = request.args.get('date')
+    service_id = request.args.get('service_id')
+    
+    try:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except:
+        return jsonify({'error': 'Invalid date'})
+    
+    if service_id:
+        service = db.session.get(Service, service_id)
+        if not service:
+            return jsonify({'error': 'Service not found'})
+        duration = service.duration
+        service_name = service.name
+    else:
+        # Default to salon setting if no service specified
+        salon_settings = SalonSettings.query.first()
+        duration = salon_settings.appointment_duration if salon_settings else 60
+        service_name = 'Default'
+    
+    time_slots = get_available_time_slots(date_obj, duration)
+    
+    return jsonify({
+        'date': date_str,
+        'duration': duration,
+        'service_name': service_name,
+        'time_slots': [{
+            'time': slot['time'],
+            'datetime': slot['datetime'].isoformat(),
+            'end_time': slot['end_time']
+        } for slot in time_slots]
+    })
+
 @app.route('/api/check-points')
 def api_check_points():
     """Check customer points"""
@@ -471,6 +531,60 @@ def api_check_points():
     
     return jsonify({
         'points': customer.points if customer else 0
+    })
+
+@app.route('/change-password', methods=['POST'])
+def change_password():
+    """Change customer password from dashboard"""
+    if 'customer_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'})
+    
+    customer_id = session['customer_id']
+    customer = db.session.get(Customer, customer_id)
+    
+    if not customer:
+        return jsonify({'success': False, 'error': 'Customer not found'})
+    
+    data = request.get_json()
+    current_password = data.get('current_password', '').strip()
+    new_password = data.get('new_password', '').strip()
+    
+    # Validate current password
+    current_hash = str(hash(current_password))
+    if customer.password_hash != current_hash:
+        return jsonify({'success': False, 'error': 'Current password is incorrect'})
+    
+    # Validate new password
+    if len(new_password) < 6:
+        return jsonify({'success': False, 'error': 'New password must be at least 6 characters'})
+    
+    # Update password
+    customer.password_hash = str(hash(new_password))
+    db.session.commit()
+    
+    # Send Telegram notification if connected
+    if customer.telegram_chat_id:
+        try:
+            message = f"🔐 Your password has been changed successfully.\n"
+            message += f"If you didn't make this change, please contact the salon immediately!"
+            send_telegram_message(customer.telegram_chat_id, message)
+        except Exception as e:
+            print(f"Failed to send Telegram notification: {e}")
+    
+    print(f"Password changed for customer: {customer.name} (ID: {customer.id})")
+    
+    return jsonify({
+        'success': True,
+        'message': 'Password updated successfully!'
+    })
+
+@app.route('/api/services')
+def api_get_services():
+    """Get all active services"""
+    services = Service.query.filter_by(is_active=True).order_by(Service.name).all()
+    
+    return jsonify({
+        'services': [service.to_dict() for service in services]
     })
 
 @app.route('/book-appointment', methods=['POST'])
@@ -490,22 +604,62 @@ def book_appointment():
     
     date_str = request.form.get('date')
     time_str = request.form.get('time')
-    service = request.form.get('service')
+    service_id = request.form.get('service_id')
+    service_name = request.form.get('service_name')
+    
+    # DEBUG: Print received values
+    print(f"DEBUG BOOKING: service_id={service_id}, service_name={service_name}")
     
     try:
         appointment_time = datetime.fromisoformat(time_str)
     except:
         return jsonify({'success': False, 'error': 'Invalid time format'})
     
+    # Get service duration and ensure we have a service name
+    service = None
+    duration = None
+    final_service_name = None
+    
+    # Try to get service by ID first
+    if service_id and service_id.isdigit():
+        service = db.session.get(Service, int(service_id))
+        if service:
+            duration = service.duration
+            final_service_name = service.name
+            print(f"DEBUG: Found service by ID: {service.name}")
+    
+    # If no service found by ID but we have service_name from form
+    if not service and service_name:
+        final_service_name = service_name
+        print(f"DEBUG: Using service_name from form: {service_name}")
+        
+        # Try to find service by name
+        service = Service.query.filter_by(name=service_name).first()
+        if service:
+            duration = service.duration
+            print(f"DEBUG: Found service by name: {service.name}")
+    
+    # If still no duration, use default
+    if not duration:
+        salon_settings = SalonSettings.query.first()
+        duration = salon_settings.appointment_duration
+        print(f"DEBUG: Using default duration: {duration}")
+    
+    # If still no service name, use a default
+    if not final_service_name:
+        final_service_name = "Hair Service"
+        print(f"DEBUG: Using default service name: {final_service_name}")
+    
+    # Check if slot is available with this duration
     date_obj = appointment_time.date()
-    available_slots = get_available_time_slots(date_obj)
+    available_slots = get_available_time_slots(date_obj, duration)
     slot_available = any(
         slot['datetime'] == appointment_time 
         for slot in available_slots
     )
     
     if not slot_available:
-        return jsonify({'success': False, 'error': 'Time slot no longer available'})
+        return jsonify({'success': False, 'error': 'Time slot no longer available for this service duration'})
     
     salon_settings = SalonSettings.query.first()
     appointment_count = Appointment.query.filter(
@@ -516,26 +670,62 @@ def book_appointment():
     if appointment_count >= salon_settings.max_daily_appointments:
         return jsonify({'success': False, 'error': 'Date is fully booked'})
     
+    # Calculate end time
+    end_time = appointment_time + timedelta(minutes=duration)
+    
+    # Deduct points
+    old_points = customer.points
     customer.points -= 10
     
+    # Create appointment with all required fields
     appointment = Appointment(
         customer_id=customer.id,
-        service_type=service,
+        service_id=service.id if service else None,
+        service_type=final_service_name,  # This must NOT be None
         appointment_time=appointment_time,
-        duration=salon_settings.appointment_duration,
-        end_time=appointment_time + timedelta(minutes=salon_settings.appointment_duration),
+        duration=duration,
+        end_time=end_time,
         points_deducted=10,
         status='confirmed'
     )
     
-    db.session.add(appointment)
-    db.session.commit()
+    # DEBUG: Print appointment details before commit
+    print(f"DEBUG: Creating appointment with service_type: {appointment.service_type}")
     
-    session['customer_points'] = customer.points
-    
-    send_appointment_confirmation(customer, appointment)
-    
-    return jsonify({'success': True, 'message': 'Appointment booked!'})
+    try:
+        db.session.add(appointment)
+        
+        # Add points history
+        points_history = PointsHistory(
+            customer_id=customer.id,
+            old_points=old_points,
+            new_points=customer.points,
+            difference=-10,
+            reason=f'Appointment booking: {final_service_name}',
+            changed_by='system'
+        )
+        db.session.add(points_history)
+        
+        db.session.commit()
+        
+        session['customer_points'] = customer.points
+        
+        # Send confirmation
+        send_appointment_confirmation(customer, appointment)
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Appointment booked! Duration: {duration} minutes',
+            'end_time': end_time.strftime('%I:%M %p')
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"ERROR booking appointment: {str(e)}")
+        return jsonify({
+            'success': False, 
+            'error': f'Database error: {str(e)}'
+        })
 
 # =========================
 # APPOINTMENT CANCELLATION ROUTES
@@ -815,6 +1005,8 @@ def admin_dashboard():
     total_customers = Customer.query.count()
     total_appointments = Appointment.query.count()
     pending_appointments = Appointment.query.filter_by(status='pending').count()
+    total_services = Service.query.count()
+    active_services = Service.query.filter_by(is_active=True).count()
     
     today = date.today()
     today_appointments = Appointment.query.filter(
@@ -843,7 +1035,9 @@ def admin_dashboard():
         pending_appointments=pending_appointments,
         today_appointments=today_appointments,
         recent_appointments=recent_appointments,
-        upcoming_today=upcoming_today
+        upcoming_today=upcoming_today,
+        total_services=total_services,
+        active_services=active_services
     )
 
 @app.route('/admin/settings', methods=['GET', 'POST'])
@@ -921,6 +1115,147 @@ def admin_customers():
         medium_points=medium_points,
         high_points=high_points
     )
+
+# =========================
+# SERVICE MANAGEMENT ROUTES
+# =========================
+
+@app.route('/admin/services')
+def admin_services():
+    """Admin services management"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login_page'))
+    
+    services = Service.query.order_by(Service.name).all()
+    
+    return render_template('admin_services.html', services=services)
+
+@app.route('/admin/services/add', methods=['POST'])
+def admin_add_service():
+    """Add new service"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'success': False, 'error': 'Unauthorized'})
+    
+    name = request.form.get('name', '').strip()
+    duration = request.form.get('duration', 0)
+    description = request.form.get('description', '').strip()
+    price = request.form.get('price', '').strip()
+    
+    if not name:
+        return jsonify({'success': False, 'error': 'Service name is required'})
+    
+    try:
+        duration = int(duration)
+        if duration < 15 or duration > 480:
+            return jsonify({'success': False, 'error': 'Duration must be between 15 and 480 minutes'})
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Invalid duration'})
+    
+    # Parse price if provided
+    price_float = None
+    if price:
+        try:
+            price_float = float(price)
+        except ValueError:
+            pass
+    
+    service = Service(
+        name=name,
+        duration=duration,
+        description=description,
+        price=price_float
+    )
+    
+    db.session.add(service)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': f'Service "{name}" added successfully',
+        'service': service.to_dict()
+    })
+
+@app.route('/admin/services/update', methods=['POST'])
+def admin_update_service():
+    """Update existing service"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'success': False, 'error': 'Unauthorized'})
+    
+    service_id = request.form.get('service_id')
+    name = request.form.get('name', '').strip()
+    duration = request.form.get('duration', 0)
+    description = request.form.get('description', '').strip()
+    price = request.form.get('price', '').strip()
+    is_active = request.form.get('is_active') == 'on'
+    
+    service = db.session.get(Service, service_id)
+    if not service:
+        return jsonify({'success': False, 'error': 'Service not found'})
+    
+    if not name:
+        return jsonify({'success': False, 'error': 'Service name is required'})
+    
+    try:
+        duration = int(duration)
+        if duration < 15 or duration > 480:
+            return jsonify({'success': False, 'error': 'Duration must be between 15 and 480 minutes'})
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Invalid duration'})
+    
+    # Parse price if provided
+    price_float = None
+    if price:
+        try:
+            price_float = float(price)
+        except ValueError:
+            pass
+    
+    service.name = name
+    service.duration = duration
+    service.description = description
+    service.price = price_float
+    service.is_active = is_active
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': f'Service "{name}" updated successfully',
+        'service': service.to_dict()
+    })
+
+@app.route('/admin/services/delete/<int:service_id>', methods=['POST'])
+def admin_delete_service(service_id):
+    """Delete service"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'success': False, 'error': 'Unauthorized'})
+    
+    service = db.session.get(Service, service_id)
+    if not service:
+        return jsonify({'success': False, 'error': 'Service not found'})
+    
+    # Check if service has appointments
+    appointment_count = Appointment.query.filter_by(service_id=service.id).count()
+    if appointment_count > 0:
+        # Instead of deleting, just deactivate
+        service.is_active = False
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': f'Service "{service.name}" deactivated (has {appointment_count} appointments)'
+        })
+    
+    db.session.delete(service)
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': f'Service "{service.name}" deleted successfully'
+    })
+
+# =========================
+# END SERVICE MANAGEMENT
+# =========================
 
 @app.route('/logout')
 def logout():
@@ -1645,6 +1980,7 @@ if __name__ == '__main__':
     print(f"🚀 Starting Hair Salon System...")
     print(f"🌐 Customer Portal: http://localhost:{port}")
     print(f"🔧 Admin Panel: http://localhost:{port}/admin-login")
+    print(f"📋 Services Management: http://localhost:{port}/admin/services")
     print(f"🤖 Telegram Bot: {Config.TELEGRAM_BOT_LINK}")
     print(f"🔗 Telegram Webhook: http://localhost:{port}/telegram-webhook")
     app.run(debug=True, port=port)

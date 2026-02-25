@@ -3,159 +3,583 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Hair Salon</title>
+    <title>Customer Login - HS Salon</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}" media="(max-width: 768px)">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
         
         .container {
-            max-width: 400px;
-            margin: 100px auto;
-            padding: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 450px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
         }
         
-        h1 {
+        .header {
+            background: linear-gradient(135deg, #0d1b3e 0%, #1a3a7a 100%);
+            color: white;
+            padding: 30px;
             text-align: center;
-            color: #333;
-            margin-bottom: 30px;
+            position: relative;
         }
         
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-subtitle {
+            margin: 8px 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+            font-weight: 300;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        /* Card styling to match dashboard */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #eaeaea;
+            margin-bottom: 20px;
+        }
+        
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #1a3a7a;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f4f8;
+        }
+        
+        .card h2 i {
+            color: #2a5298;
+            font-size: 20px;
+        }
+        
+        /* Form controls to match dashboard */
         .form-group {
             margin-bottom: 20px;
         }
         
-        label {
+        .form-group label {
             display: block;
-            margin-bottom: 5px;
-            color: #555;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 600;
+            font-size: 14px;
         }
         
-        input[type="text"],
-        input[type="tel"],
-        input[type="password"] {
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            color: #6c757d;
+            z-index: 1;
+        }
+        
+        .form-control {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: white;
         }
         
+        .form-control:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        
+        /* Button styles to match dashboard */
         .btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, #2a5298 0%, #1a3a7a 100%);
             color: white;
+            padding: 14px 25px;
             border: none;
-            border-radius: 4px;
-            font-size: 16px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            width: 100%;
         }
         
         .btn:hover {
-            background-color: #45a049;
+            background: linear-gradient(135deg, #1a3a7a 0%, #0d1b3e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(42, 82, 152, 0.3);
+            color: white;
         }
         
-        .back-link {
-            text-align: center;
-            margin-top: 15px;
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
         }
         
-        .back-link a {
-            color: #666;
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #5a6268 0%, #494f54 100%);
+        }
+        
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 13px;
+            width: auto;
+        }
+        
+        /* Links styling */
+        .links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0 10px;
+            flex-wrap: wrap;
+        }
+        
+        .links a {
+            color: #2a5298;
             text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         
+        .links a:hover {
+            color: #1a3a7a;
+            text-decoration: underline;
+        }
+        
+        .separator {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        /* Flash messages to match dashboard */
         .flash-message {
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            animation: slideIn 0.3s ease;
         }
         
-        .success {
-            background-color: #d4edda;
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .flash-message.success {
+            background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
         
-        .error {
-            background-color: #f8d7da;
+        .flash-message.error {
+            background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
         
-        .info {
-            background-color: #d1ecf1;
+        .flash-message.info {
+            background: #d1ecf1;
             color: #0c5460;
             border: 1px solid #bee5eb;
+        }
+        
+        /* Info box to match dashboard card style */
+        .info-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #ffc107;
+            font-size: 13px;
+        }
+        
+        .info-box p {
+            margin: 5px 0;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-box i {
+            color: #ffc107;
+            width: 18px;
+        }
+        
+        /* Modal styles to match dashboard */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .modal-title {
+            margin-bottom: 20px;
+            color: #1a3a7a;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .contact-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .contact-item:last-child {
+            border-bottom: none;
+        }
+        
+        .contact-item i {
+            width: 20px;
+            font-size: 16px;
+        }
+        
+        .contact-item .telegram-icon { color: #0088cc; }
+        .contact-item .phone-icon { color: #28a745; }
+        .contact-item .email-icon { color: #dc3545; }
+        
+        .warning-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+        
+        .warning-box i {
+            color: #856404;
+            margin-right: 8px;
+        }
+        
+        .warning-box p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            color: #856404;
+        }
+        
+        /* Stats card style for points preview */
+        .stats-mini {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-mini-item {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            border-left: 3px solid #2a5298;
+        }
+        
+        .stat-mini-item .number {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a3a7a;
+        }
+        
+        .stat-mini-item .label {
+            font-size: 11px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .links {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .separator {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Customer Login</h1>
+        <!-- Header matching dashboard style -->
+        <div class="header">
+            <h1>Welcome Back! 👋</h1>
+            <p class="header-subtitle">Login to manage your appointments and rewards</p>
+        </div>
         
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-message {{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        <form action="{{ url_for('customer_login') }}" method="POST">
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" 
-                       placeholder="012-3456789 or +60123456789" required>
+        <div class="content">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Login Card -->
+            <div class="card">
+                <h2>
+                    <i class="fas fa-sign-in-alt"></i>
+                    Customer Login
+                </h2>
+                
+                <form action="{{ url_for('customer_login') }}" method="POST">
+                    <div class="form-group">
+                        <label for="phone">
+                            <i class="fas fa-phone"></i> Phone Number
+                        </label>
+                        <div class="input-group">
+                            <i class="fas fa-phone-alt input-icon"></i>
+                            <input type="tel" id="phone" name="phone" class="form-control" 
+                                   placeholder="012-3456789 or +60123456789" 
+                                   value="{{ request.form.phone if request.form.phone else '' }}"
+                                   required>
+                        </div>
+                        <small style="color: #6c757d; font-size: 11px; margin-top: 5px; display: block;">
+                            Format: 012-3456789 or +60123456789
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i> Password
+                        </label>
+                        <div class="input-group">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="password" name="password" class="form-control" 
+                                   placeholder="Enter your password" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </form>
+                
+                <div class="links">
+                    <a href="#" onclick="showPasswordResetInfo()">
+                        <i class="fas fa-question-circle"></i> Forgot password?
+                    </a>
+                    <span class="separator">|</span>
+                    <a href="{{ url_for('index') }}">
+                        <i class="fas fa-home"></i> Back to Home
+                    </a>
+                </div>
             </div>
             
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" 
-                       placeholder="Enter your password" required>
+            <!-- Quick Info Card -->
+            <div class="card" style="padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                    <i class="fas fa-info-circle" style="color: #2a5298; font-size: 24px;"></i>
+                    <div>
+                        <h3 style="color: #1a3a7a; font-size: 16px; margin: 0;">New Customer?</h3>
+                        <p style="color: #6c757d; font-size: 13px; margin: 5px 0 0 0;">
+                            Register on the home page and get <strong>10 bonus points</strong>!
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Mini stats preview -->
+                <div class="stats-mini">
+                    <div class="stat-mini-item">
+                        <div class="number">10</div>
+                        <div class="label">Signup Points</div>
+                    </div>
+                    <div class="stat-mini-item">
+                        <div class="number">20</div>
+                        <div class="label">Per Visit</div>
+                    </div>
+                    <div class="stat-mini-item">
+                        <div class="number">5</div>
+                        <div class="label">Per Referral</div>
+                    </div>
+                </div>
             </div>
             
-            <button type="submit" class="btn">Login</button>
-        </form>
-        
-        <div class="links">
-            <a href="{{ url_for('forgot_password_page') }}">Forgot Password?</a> |
-            <a href="{{ url_for('index') }}">Home</a>
+            <!-- Security Note -->
+            <div class="info-box">
+                <p>
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Your data is encrypted and secure</span>
+                </p>
+                <p>
+                    <i class="fas fa-clock"></i>
+                    <span>Session expires after 30 minutes of inactivity</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Password Reset Info Modal -->
+    <div id="resetInfoModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">
+                <i class="fas fa-key" style="color: #ffc107;"></i>
+                Password Reset
+            </h3>
+            
+            <p style="color: #6c757d; margin-bottom: 20px;">
+                Please contact the salon admin to reset your password:
+            </p>
+            
+            <div class="contact-details">
+                <div class="contact-item">
+                    <i class="fab fa-telegram telegram-icon"></i>
+                    <span><strong>Telegram:</strong> @HS_Salon_Admin</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone phone-icon"></i>
+                    <span><strong>Phone:</strong> 012-345-6789</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope email-icon"></i>
+                    <span><strong>Email:</strong> admin@hairsalon.com</span>
+                </div>
+            </div>
+            
+            <div class="warning-box">
+                <i class="fas fa-lightbulb"></i>
+                <strong>Important:</strong>
+                <p style="margin: 5px 0 0 0; font-size: 13px;">
+                    Once admin resets your password, you'll receive a temporary password via Telegram/SMS.
+                    You can then change it in your dashboard after logging in.
+                </p>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="closeResetModal()" class="btn" style="flex: 1;">
+                    <i class="fas fa-check"></i> Got it
+                </button>
+                <a href="{{ TELEGRAM_BOT_LINK }}" target="_blank" class="btn btn-secondary" style="flex: 1; text-decoration: none;">
+                    <i class="fab fa-telegram"></i> Contact via Telegram
+                </a>
+            </div>
         </div>
     </div>
     
     <script>
-        // Phone number formatting for login page
-        document.addEventListener('DOMContentLoaded', function() {
-            // Phone number formatting function
-            function formatPhoneNumber(phone) {
-                // Remove all non-digits
-                let cleaned = phone.replace(/\D/g, '');
-                
-                // Check if the number looks like a Malaysian number
-                if (cleaned.length === 10 && cleaned.startsWith('01')) {
-                    // Format as 012-3456789
-                    return cleaned.replace(/(\d{3})(\d{7})/, '$1-$2');
-                } else if (cleaned.length === 11 && cleaned.startsWith('01')) {
-                    // Format as 012-34567890
-                    return cleaned.replace(/(\d{3})(\d{8})/, '$1-$2');
-                } else if (cleaned.length === 12 && cleaned.startsWith('60')) {
-                    // Format as +60 12-3456789
-                    return '+' + cleaned.replace(/(\d{2})(\d{2})(\d{7})/, '$1 $2-$3');
-                }
-                
-                return phone;
+        // Phone number formatting function
+        function formatPhoneNumber(phone) {
+            // Remove all non-digits
+            let cleaned = phone.replace(/\D/g, '');
+            
+            // Check if the number looks like a Malaysian number
+            if (cleaned.length === 10 && cleaned.startsWith('01')) {
+                // Format as 012-3456789
+                return cleaned.replace(/(\d{3})(\d{7})/, '$1-$2');
+            } else if (cleaned.length === 11 && cleaned.startsWith('01')) {
+                // Format as 012-34567890
+                return cleaned.replace(/(\d{3})(\d{8})/, '$1-$2');
+            } else if (cleaned.length === 12 && cleaned.startsWith('60')) {
+                // Format as +60 12-3456789
+                return '+' + cleaned.replace(/(\d{2})(\d{2})(\d{7})/, '$1 $2-$3');
             }
             
-            // Get phone input
+            return phone;
+        }
+        
+        // Initialize phone formatting
+        document.addEventListener('DOMContentLoaded', function() {
             const phoneInput = document.getElementById('phone');
             if (phoneInput) {
                 // Auto-format on blur
@@ -181,6 +605,23 @@
                 }
             }
         });
+        
+        // Modal functions
+        function showPasswordResetInfo() {
+            document.getElementById('resetInfoModal').style.display = 'flex';
+        }
+        
+        function closeResetModal() {
+            document.getElementById('resetInfoModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('resetInfoModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>

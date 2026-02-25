@@ -807,7 +807,7 @@
         <div class="header">
             <div class="welcome-section">
                 <div>
-                    <h1>HS Salon Customers</h1>
+                    <h1>Customers</h1>
                     <p class="header-subtitle">View and manage all salon customers</p>
                 </div>
                 <div>
@@ -824,19 +824,24 @@
         <nav class="admin-nav">
             <div class="nav-container">
                 <ul>
-                    <li><a href="{{ url_for('admin_dashboard') }}">
+                    <li><a href="{{ url_for('admin_dashboard') }}" class="active">
                         <i class="fas fa-tachometer-alt"></i> Dashboard
                     </a></li>
                     <li><a href="{{ url_for('admin_appointments') }}">
                         <i class="fas fa-calendar-check"></i> Appointments
                     </a></li>
-                    <li><a href="{{ url_for('admin_customers') }}" class="active">
+                    <li><a href="{{ url_for('admin_customers') }}">
                         <i class="fas fa-users"></i> Customers
+                    </a></li>
+                    <li><a href="{{ url_for('admin_services') }}">
+                        <i class="fas fa-cut"></i> Services
                     </a></li>
                     <li><a href="{{ url_for('admin_settings') }}">
                         <i class="fas fa-cog"></i> Settings
                     </a></li>
-                    <li><a href="{{ url_for('admin_off_days') }}"><i class="fas fa-calendar-times"></i> Off Days</a></li>
+                    <li><a href="{{ url_for('admin_off_days') }}">
+                        <i class="fas fa-calendar-times"></i> Off Days
+                    </a></li>
                 </ul>
             </div>
         </nav>

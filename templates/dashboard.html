@@ -194,6 +194,7 @@
             gap: 10px;
             transition: all 0.3s;
             width: 100%;
+            justify-content: center;
         }
         
         .btn:hover {
@@ -317,12 +318,6 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             color: white;
             text-decoration: none;
-        }
-        
-        .nav-button.disabled {
-            opacity: 0.5;
-            pointer-events: none;
-            background: #6c757d;
         }
         
         .today-button {
@@ -503,7 +498,6 @@
         .time-slot.past-time:hover {
             transform: none;
             box-shadow: none;
-            background: #f8f9fa !important;
         }
         
         /* Appointment List */
@@ -976,6 +970,47 @@
                 font-size: 0.8rem;
             }
         }
+
+        /* Password strength indicator */
+        .password-strength-meter {
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+        
+        .password-strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .strength-weak {
+            background: #dc3545;
+        }
+        
+        .strength-medium {
+            background: #ffc107;
+        }
+        
+        .strength-strong {
+            background: #28a745;
+        }
+
+        /* Grid layout for two columns */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1043,10 +1078,12 @@
                 <h2><i class="fas fa-calendar-plus"></i> Book New Appointment</h2>
                 
                 <div class="form-group">
-                    <label for="service">Select Service</label>
-                    <select id="service" class="form-control">
+                    <label for="serviceSelect">Select Service</label>
+                    <select id="serviceSelect" class="form-control">
                         {% for service in services %}
-                        <option value="{{ service }}">{{ service }}</option>
+                        <option value="{{ service.id }}" data-name="{{ service.name }}" data-duration="{{ service.duration }}" data-price="{{ service.price }}">
+                            {{ service.name }} ({{ service.duration }} min) - RM {{ "%.2f"|format(service.price) if service.price else 'N/A' }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -1076,7 +1113,7 @@
                         </a>
                     </div>
                     
-                    <!-- Calendar Grid with Day Headers -->
+                    <!-- Calendar Grid -->
                     <div class="calendar-container">
                         <div class="calendar-grid">
                             <!-- Day Headers -->
@@ -1093,12 +1130,12 @@
                             <div class="calendar-day-cell 
                                         {{ day.color }} 
                                         {% if day.is_today %}today{% endif %} 
-                                        {% if day.is_past_date %}past-date{% endif %}
+                                        {% if day.is_past %}past-date{% endif %}
                                         {% if not day.is_current_month %}other-month{% endif %}"
                                  data-date="{{ day.date.isoformat() }}"
                                  data-month="{{ day.month }}"
                                  data-year="{{ day.year }}"
-                                 {% if day.is_current_month and not day.is_past_date and day.color != 'off-day' %}onclick="selectDate('{{ day.date.isoformat() }}', this)"{% endif %}>
+                                 {% if day.is_current_month and not day.is_past and day.color != 'off-day' %}onclick="Dashboard.selectDate('{{ day.date.isoformat() }}', this)"{% endif %}>
                                 
                                 <div class="date-number">
                                     {{ day.day }}
@@ -1114,7 +1151,7 @@
                                 </div>
                                 
                                 <div class="date-status">
-                                    {% if day.is_past_date %}
+                                    {% if day.is_past %}
                                         PASSED
                                     {% else %}
                                         {{ day.status }}
@@ -1133,7 +1170,7 @@
                     <div class="calendar-legend">
                         <div class="legend-item">
                             <span class="legend-color available"></span>
-                            <span>Available (< 50%)</span>
+                            <span>Available (&lt; 50%)</span>
                         </div>
                         <div class="legend-item">
                             <span class="legend-color medium"></span>
@@ -1141,7 +1178,7 @@
                         </div>
                         <div class="legend-item">
                             <span class="legend-color full"></span>
-                            <span>Full (>80%)</span>
+                            <span>Full (&gt;80%)</span>
                         </div>
                         <div class="legend-item">
                             <span class="legend-color off-day"></span>
@@ -1152,7 +1189,7 @@
                 
                 <div class="form-group">
                     <label>Select Time Slot</label>
-                    <div class="time-slots" id="time-slots-container">
+                    <div class="time-slots" id="timeSlotsContainer">
                         <p style="text-align: center; color: #6c757d; padding: 20px;">
                             <i class="fas fa-calendar-alt"></i><br>
                             Select a date to see available time slots
@@ -1160,14 +1197,14 @@
                     </div>
                 </div>
                 
-                <button class="btn btn-success" id="book-btn" onclick="bookAppointment()" disabled>
+                <button class="btn btn-success" id="bookBtn" onclick="Dashboard.bookAppointment()" disabled>
                     <i class="fas fa-calendar-check"></i> Book Appointment (10 points)
                 </button>
-                <div id="booking-message" style="margin-top: 15px;"></div>
+                <div id="bookingMessage" style="margin-top: 15px;"></div>
             </div>
             
-            <!-- Two Column Layout -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 25px;">
+            <!-- Two Column Grid -->
+            <div class="dashboard-grid">
                 <!-- Referral Program Card -->
                 <div class="card">
                     <h2><i class="fas fa-gift"></i> Referral Program</h2>
@@ -1185,7 +1222,7 @@
                     <div style="margin-bottom: 20px;">
                         <label style="font-weight: 600; margin-bottom: 10px; display: block;">Your Referral Link</label>
                         <div class="referral-link">{{ referral_url }}</div>
-                        <button class="btn" onclick="copyReferralLink()" style="margin-top: 10px;">
+                        <button class="btn" onclick="Dashboard.copyReferralLink()" style="margin-top: 10px;">
                             <i class="fas fa-copy"></i> Copy Link
                         </button>
                     </div>
@@ -1225,62 +1262,91 @@
                     </a>
                 </div>
                 
-                <!-- Recent Appointments Card -->
+                <!-- Password Management Card -->
                 <div class="card">
-                    <h2><i class="fas fa-history"></i> Recent Appointments</h2>
-                    
-                    {% if appointments %}
-                    <ul class="appointments-list" id="appointmentsList">
-                        {% for appointment in appointments %}
-                        <li class="appointment-item" id="appointment-{{ appointment.id }}">
-                            <div class="appointment-details">
-                                <div>
-                                    <strong style="color: #1a3a7a; font-size: 16px;">{{ appointment.service_type }}</strong>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div style="font-weight: 600; color: #495057;">
-                                        {{ appointment.appointment_time.strftime('%b %d') }}
-                                    </div>
-                                    <div style="font-size: 14px; color: #6c757d;">
-                                        {{ appointment.appointment_time.strftime('%I:%M %p') }}
-                                    </div>
-                                </div>
+                    <h2><i class="fas fa-key"></i> Change Password</h2>
+    
+                    <div id="passwordChangeForm">
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" class="form-control" placeholder="Enter current password">
+                        </div>
+                         
+                        <div class="form-group">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" class="form-control" placeholder="Enter new password (min. 6 characters)">
+                            <div class="password-strength-meter">
+                                <div id="passwordStrengthFill" class="password-strength-fill"></div>
                             </div>
-                            <span class="status-badge status-{{ appointment.status }}">
-                                {{ appointment.status|title }}
-                            </span>
-                            
-                            {% if appointment.cancelled_at %}
-                            <div class="cancellation-info">
-                                <i class="fas fa-times"></i>
-                                Cancelled: {{ appointment.cancelled_at.strftime('%Y-%m-%d %I:%M %p') }}
-                                {% if appointment.cancellation_reason %}
-                                <br>Reason: {{ appointment.cancellation_reason }}
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            <div class="appointment-actions">
-                                {% if appointment.status in ['pending', 'confirmed'] %}
-                                <button class="btn btn-danger btn-sm cancel-appointment-btn"
-                                        data-appointment-id="{{ appointment.id }}"
-                                        data-service="{{ appointment.service_type }}"
-                                        data-datetime="{{ appointment.appointment_time.isoformat() }}"
-                                        onclick="openCancelModal('{{ appointment.id }}', '{{ appointment.service_type }}', '{{ appointment.appointment_time.isoformat() }}')">
-                                    <i class="fas fa-times"></i> Cancel Appointment
-                                </button>
-                                {% endif %}
-                            </div>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    <div style="text-align: center; padding: 40px 20px; color: #6c757d;">
-                        <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
-                        <p>No appointments yet. Book your first appointment!</p>
+                            <div id="passwordStrengthText" style="font-size: 12px; margin-top: 5px;"></div>
+                        </div>
+        
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm new password">
+                        </div>
+        
+                        <button class="btn btn-success" onclick="Dashboard.changePassword()" id="changePasswordBtn">
+                            <i class="fas fa-save"></i> Update Password
+                        </button>
+        
+                        <div id="passwordMessage" style="margin-top: 15px;"></div>
                     </div>
-                    {% endif %}
                 </div>
+            </div>
+            
+            <!-- Recent Appointments Card -->
+            <div class="card">
+                <h2><i class="fas fa-history"></i> Recent Appointments</h2>
+                
+                {% if appointments %}
+                <ul class="appointments-list" id="appointmentsList">
+                    {% for appointment in appointments %}
+                    <li class="appointment-item" id="appointment-{{ appointment.id }}">
+                        <div class="appointment-details">
+                            <div>
+                                <strong style="color: #1a3a7a; font-size: 16px;">{{ appointment.service_type }}</strong>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 600; color: #495057;">
+                                    {{ appointment.appointment_time.strftime('%b %d') }}
+                                </div>
+                                <div style="font-size: 14px; color: #6c757d;">
+                                    {{ appointment.appointment_time.strftime('%I:%M %p') }}
+                                </div>
+                            </div>
+                        </div>
+                        <span class="status-badge status-{{ appointment.status }}">
+                            {{ appointment.status|title }}
+                        </span>
+                        
+                        {% if appointment.cancelled_at %}
+                        <div class="cancellation-info">
+                            <i class="fas fa-times"></i>
+                            Cancelled: {{ appointment.cancelled_at.strftime('%Y-%m-%d %I:%M %p') }}
+                            {% if appointment.cancellation_reason %}
+                            <br>Reason: {{ appointment.cancellation_reason }}
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="appointment-actions">
+                            {% if appointment.status in ['pending', 'confirmed'] %}
+                            <button class="btn btn-danger btn-sm cancel-appointment-btn"
+                                    onclick="Dashboard.openCancelModal('{{ appointment.id }}', '{{ appointment.service_type }}', '{{ appointment.appointment_time.isoformat() }}')">
+                                <i class="fas fa-times"></i> Cancel Appointment
+                            </button>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div style="text-align: center; padding: 40px 20px; color: #6c757d;">
+                    <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p>No appointments yet. Book your first appointment!</p>
+                </div>
+                {% endif %}
             </div>
             
             <!-- Points History Card -->
@@ -1308,10 +1374,10 @@
                     
                     <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px;">
                         <div style="font-size: 24px; font-weight: 800; color: #dc3545; margin-bottom: 5px;">
-                            {{ customer.points_spent or 0 }}
+                            {{ (appointments|selectattr('status', 'equalto', 'completed')|list|length) * 20 }}
                         </div>
                         <div style="font-size: 14px; color: #6c757d; font-weight: 600;">
-                            Points Spent
+                            Points Earned
                         </div>
                     </div>
                 </div>
@@ -1359,10 +1425,10 @@
             </div>
             
             <div class="modal-buttons">
-                <button class="btn btn-danger" onclick="confirmCancellation()">
+                <button class="btn btn-danger" onclick="Dashboard.confirmCancellation()">
                     <i class="fas fa-times"></i> Cancel Appointment
                 </button>
-                <button class="btn" onclick="closeCancelModal()" style="background: #6c757d;">
+                <button class="btn" onclick="Dashboard.closeCancelModal()" style="background: #6c757d;">
                     <i class="fas fa-times"></i> Keep Appointment
                 </button>
             </div>
@@ -1370,48 +1436,118 @@
     </div>
     
     <script>
-        // Dashboard Application State
-        const DashboardApp = {
-            // State variables
-            selectedDate: null,
-            selectedTime: null,
-            appointmentToCancel: null,
-            appointmentCancelTime: null,
-            
-            // Initialize the dashboard
+        // Main Dashboard Object - Single global object to avoid conflicts
+        const Dashboard = {
+            // State
+            state: {
+                selectedDate: null,
+                selectedTime: null,
+                selectedService: null,
+                appointmentToCancel: null,
+                appointmentCancelTime: null
+            },
+
+            // Initialize
             init() {
                 this.updateCurrentTime();
                 this.setupEventListeners();
                 this.markPastDates();
+                this.setupPasswordStrength();
+                this.checkUrlParams();
                 
                 // Update time every second
                 setInterval(() => this.updateCurrentTime(), 1000);
                 
                 // Check points periodically
                 setInterval(() => this.checkPoints(), 30000);
-                
-                // Mobile responsive adjustments
-                this.updateForMobile();
-                window.addEventListener('resize', () => this.updateForMobile());
-                
-                // Check for selected date from URL params
-                this.checkUrlParams();
             },
-            
-            // Check URL parameters for date selection
+
+            // Setup event listeners
+            setupEventListeners() {
+                // Close modal when clicking outside
+                window.addEventListener('click', (event) => {
+                    const modal = document.getElementById('cancelModal');
+                    if (event.target === modal) {
+                        this.closeCancelModal();
+                    }
+                });
+
+                // Service change event
+                const serviceSelect = document.getElementById('serviceSelect');
+                if (serviceSelect) {
+                    serviceSelect.addEventListener('change', () => {
+                        if (this.state.selectedDate) {
+                            this.loadTimeSlots(this.state.selectedDate);
+                        }
+                    });
+                }
+
+                // Password strength checker
+                const newPassword = document.getElementById('newPassword');
+                if (newPassword) {
+                    newPassword.addEventListener('input', () => this.checkPasswordStrength());
+                }
+            },
+
+            // Password strength checker
+            checkPasswordStrength() {
+                const password = document.getElementById('newPassword').value;
+                const strengthFill = document.getElementById('passwordStrengthFill');
+                const strengthText = document.getElementById('passwordStrengthText');
+                
+                if (!password) {
+                    strengthFill.style.width = '0%';
+                    strengthFill.className = 'password-strength-fill';
+                    strengthText.textContent = '';
+                    return;
+                }
+                
+                let strength = 0;
+                let feedback = [];
+                
+                // Length check
+                if (password.length >= 8) strength += 25;
+                else if (password.length >= 6) strength += 15;
+                
+                // Character type checks
+                if (/[a-z]/.test(password)) strength += 25;
+                else feedback.push('lowercase');
+                
+                if (/[A-Z]/.test(password)) strength += 25;
+                else feedback.push('uppercase');
+                
+                if (/[0-9]/.test(password)) strength += 25;
+                else feedback.push('number');
+                
+                // Update UI
+                strengthFill.style.width = strength + '%';
+                
+                if (strength >= 75) {
+                    strengthFill.className = 'password-strength-fill strength-strong';
+                    strengthText.innerHTML = '<span style="color: #28a745;">✓ Strong password</span>';
+                } else if (strength >= 50) {
+                    strengthFill.className = 'password-strength-fill strength-medium';
+                    strengthText.innerHTML = '<span style="color: #ffc107;">⚠️ Medium password</span>';
+                } else {
+                    strengthFill.className = 'password-strength-fill strength-weak';
+                    strengthText.innerHTML = '<span style="color: #dc3545;">✗ Weak password - add ' + feedback.join(', ') + '</span>';
+                }
+            },
+
+            // Check URL parameters
             checkUrlParams() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const selectedDate = urlParams.get('selected_date');
                 if (selectedDate) {
                     const dateCell = document.querySelector(`[data-date="${selectedDate}"]`);
-                    if (dateCell && !dateCell.classList.contains('past-date') && !dateCell.classList.contains('off-day')) {
+                    if (dateCell && !dateCell.classList.contains('past-date') && !dateCell.classList.contains('off-day') && !dateCell.classList.contains('other-month')) {
                         setTimeout(() => {
                             this.selectDate(selectedDate, dateCell);
                         }, 500);
                     }
                 }
             },
-            
+
             // Update current time display
             updateCurrentTime() {
                 const now = new Date();
@@ -1424,28 +1560,38 @@
                     });
                 }
             },
-            
-            // Setup event listeners
-            setupEventListeners() {
-                // Close modal when clicking outside
-                window.addEventListener('click', (event) => {
-                    const modal = document.getElementById('cancelModal');
-                    if (event.target === modal) {
-                        this.closeCancelModal();
+
+            // Mark past dates on calendar
+            markPastDates() {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                
+                document.querySelectorAll('.calendar-day-cell').forEach(cell => {
+                    const dateStr = cell.getAttribute('data-date');
+                    if (dateStr) {
+                        const cellDate = new Date(dateStr);
+                        const cellDateOnly = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
+                        
+                        if (cellDateOnly < today && !cell.classList.contains('off-day') && !cell.classList.contains('other-month')) {
+                            cell.classList.add('past-date');
+                        }
                     }
                 });
             },
-            
-            // Load time slots for selected date
+
+            // Load time slots
             async loadTimeSlots(date) {
-                const container = document.getElementById('time-slots-container');
+                const container = document.getElementById('timeSlotsContainer');
                 const now = new Date();
                 const selectedDateObj = new Date(date);
+                const serviceSelect = document.getElementById('serviceSelect');
+                const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+                const serviceId = selectedOption.value;
                 
                 container.innerHTML = '<div style="text-align: center; padding: 20px; color: #6c757d;"><i class="fas fa-spinner fa-spin"></i><br>Loading time slots...</div>';
                 
                 try {
-                    const response = await fetch(`/api/time-slots?date=${date}`);
+                    const response = await fetch(`/api/service-time-slots?date=${date}&service_id=${serviceId}`);
                     const data = await response.json();
                     
                     if (data.error) {
@@ -1456,7 +1602,7 @@
                     }
                     
                     if (data.time_slots.length === 0) {
-                        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #6c757d;"><i class="fas fa-calendar-times"></i><br>No available time slots for this date.</div>';
+                        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #6c757d;"><i class="fas fa-calendar-times"></i><br>No available time slots for this service on this date.</div>';
                         return;
                     }
                     
@@ -1466,8 +1612,8 @@
                     console.error('Error loading time slots:', error);
                 }
             },
-            
-            // Render time slots in the container
+
+            // Render time slots
             renderTimeSlots(container, timeSlots, selectedDate) {
                 const now = new Date();
                 container.innerHTML = '';
@@ -1492,102 +1638,90 @@
                     container.appendChild(slotElement);
                 });
                 
-                // If no available slots for today
                 const isToday = selectedDate.toDateString() === now.toDateString();
                 if (isToday && !hasAvailableSlots) {
-                    container.innerHTML += `
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 15px; background: #fff3cd; border-radius: 8px; margin-top: 10px;">
-                            <i class="fas fa-info-circle"></i>
-                            <p style="margin: 5px 0 0 0; font-size: 13px;">
-                                All time slots for today have passed. Please select a future date.
-                            </p>
-                        </div>
+                    const infoDiv = document.createElement('div');
+                    infoDiv.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 15px; background: #fff3cd; border-radius: 8px; margin-top: 10px;';
+                    infoDiv.innerHTML = `
+                        <i class="fas fa-info-circle"></i>
+                        <p style="margin: 5px 0 0 0; font-size: 13px;">
+                            All time slots for today have passed. Please select a future date.
+                        </p>
                     `;
+                    container.appendChild(infoDiv);
                 }
             },
-            
-            // Select a time slot
-            selectTime(datetime, element) {
-                this.selectedTime = datetime;
-                
-                // Reset all time slots
-                document.querySelectorAll('.time-slot').forEach(slot => {
-                    if (!slot.classList.contains('past-time')) {
-                        slot.classList.remove('selected');
-                        slot.style.background = '#e8f4fc';
-                        slot.style.color = 'inherit';
-                        slot.style.borderColor = '#b3e0ff';
-                    }
-                });
-                
-                // Highlight selected time
-                element.classList.add('selected');
-                element.style.background = '#3498db';
-                element.style.color = 'white';
-                element.style.borderColor = '#2980b9';
-                
-                // Enable book button
-                this.updateBookButtonState();
-            },
-            
-            // Select a date
+
+            // Select date
             selectDate(date, element) {
-                // Check if date is an off-day
-                if (element.classList.contains('off-day')) {
+                if (element.classList.contains('off-day') || element.classList.contains('past-date') || element.classList.contains('other-month')) {
                     return;
                 }
                 
-                this.selectedDate = date;
+                this.state.selectedDate = date;
                 
-                // Reset all calendar cells (except past dates and off-days)
                 document.querySelectorAll('.calendar-day-cell').forEach(day => {
-                    if (!day.classList.contains('past-date') && !day.classList.contains('off-day') && !day.classList.contains('other-month')) {
-                        day.classList.remove('selected');
-                        day.style.border = '2px solid transparent';
-                    }
+                    day.classList.remove('selected');
                 });
                 
-                // Highlight selected date
                 element.classList.add('selected');
-                element.style.border = '2px solid #28a745';
-                
-                // Load time slots
                 this.loadTimeSlots(date);
-                
-                // Enable book button if time is already selected
+                this.state.selectedTime = null;
                 this.updateBookButtonState();
                 
-                // Scroll into view on mobile
                 if (window.innerWidth <= 768) {
                     element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
             },
-            
+
+            // Select time slot
+            selectTime(datetime, element) {
+                this.state.selectedTime = datetime;
+                
+                document.querySelectorAll('.time-slot').forEach(slot => {
+                    if (!slot.classList.contains('past-time')) {
+                        slot.classList.remove('selected');
+                    }
+                });
+                
+                element.classList.add('selected');
+                this.updateBookButtonState();
+            },
+
             // Update book button state
             updateBookButtonState() {
-                const bookBtn = document.getElementById('book-btn');
-                if (this.selectedDate && this.selectedTime) {
-                    bookBtn.disabled = false;
-                    bookBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment (10 points)';
-                }
+                const bookBtn = document.getElementById('bookBtn');
+                bookBtn.disabled = !(this.state.selectedDate && this.state.selectedTime);
             },
-            
+
             // Book appointment
             async bookAppointment() {
-                if (!this.selectedDate || !this.selectedTime) {
-                    this.showMessage('Please select both date and time', 'error');
+                if (!this.state.selectedDate || !this.state.selectedTime) {
+                    this.showMessage('Please select a date and time', 'error');
                     return;
                 }
                 
-                const service = document.getElementById('service').value;
-                const bookBtn = document.getElementById('book-btn');
-                const selectedDateTime = new Date(this.selectedTime);
+                const serviceSelect = document.getElementById('serviceSelect');
+                const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+                const serviceId = selectedOption.value;
+                const serviceName = selectedOption.getAttribute('data-name');
+                const selectedDateTime = new Date(this.state.selectedTime);
                 const now = new Date();
                 
-                // Double-check that selected time is not in the past
                 if (selectedDateTime < now) {
                     this.showMessage('Cannot book past time slots. Please select a future time.', 'error');
                     return;
+                }
+                
+                try {
+                    const pointsResponse = await fetch('/api/check-points');
+                    const pointsData = await pointsResponse.json();
+                    if (pointsData.points < 10) {
+                        this.showMessage('You need at least 10 points to book an appointment', 'error');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error checking points:', error);
                 }
                 
                 const timeString = selectedDateTime.toLocaleTimeString('en-US', {
@@ -1601,83 +1735,64 @@
                     day: 'numeric'
                 });
                 
-                if (confirm(`Book ${service} on ${dateString} at ${timeString}?`)) {
-                    bookBtn.disabled = true;
-                    bookBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
+                if (!confirm(`Book ${serviceName} on ${dateString} at ${timeString}?`)) {
+                    return;
+                }
+                
+                const bookBtn = document.getElementById('bookBtn');
+                bookBtn.disabled = true;
+                bookBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
+                
+                const formData = new FormData();
+                formData.append('date', this.state.selectedDate);
+                formData.append('time', this.state.selectedTime);
+                formData.append('service_id', serviceId);
+                formData.append('service_name', serviceName);
+                
+                try {
+                    const response = await fetch('/book-appointment', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
                     
-                    const formData = new FormData();
-                    formData.append('date', this.selectedDate);
-                    formData.append('time', this.selectedTime);
-                    formData.append('service', service);
-                    
-                    try {
-                        const response = await fetch('/book-appointment', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                            this.showMessage(data.message, 'success');
-                            bookBtn.innerHTML = '<i class="fas fa-check"></i> Appointment Booked!';
-                            
-                            // Reload page after 2 seconds
-                            setTimeout(() => {
-                                location.reload();
-                            }, 2000);
-                        } else {
-                            this.showMessage(data.error, 'error');
-                            bookBtn.disabled = false;
-                            bookBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment (10 points)';
-                        }
-                    } catch (error) {
-                        this.showMessage('Network error. Please try again.', 'error');
+                    if (data.success) {
+                        this.showMessage(data.message, 'success');
+                        bookBtn.innerHTML = '<i class="fas fa-check"></i> Appointment Booked!';
+                        this.checkPoints();
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        this.showMessage(data.error || 'Failed to book appointment', 'error');
                         bookBtn.disabled = false;
                         bookBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment (10 points)';
-                        console.error('Booking error:', error);
                     }
+                } catch (error) {
+                    this.showMessage('Network error. Please try again.', 'error');
+                    bookBtn.disabled = false;
+                    bookBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Appointment (10 points)';
+                    console.error('Booking error:', error);
                 }
             },
-            
-            // Show booking message
+
+            // Show message
             showMessage(text, type) {
-                const messageDiv = document.getElementById('booking-message');
-                messageDiv.innerHTML = `<div class="${type}">${text}</div>`;
+                const messageDiv = document.getElementById('bookingMessage');
+                messageDiv.innerHTML = `<div class="${type}" style="padding: 12px; border-radius: 8px;">${text}</div>`;
+                setTimeout(() => messageDiv.innerHTML = '', 5000);
             },
-            
+
             // Copy referral link
             copyReferralLink() {
                 const link = "{{ referral_url }}";
                 navigator.clipboard.writeText(link)
-                    .then(() => {
-                        alert('Referral link copied to clipboard!');
-                    })
+                    .then(() => this.showNotification('Referral link copied to clipboard!', 'success'))
                     .catch(err => {
                         console.error('Failed to copy:', err);
-                        alert('Failed to copy link. Please select and copy manually.');
+                        this.showNotification('Failed to copy link. Please select and copy manually.', 'error');
                     });
             },
-            
-            // Mark past dates on calendar
-            markPastDates() {
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                
-                document.querySelectorAll('.calendar-day-cell').forEach(cell => {
-                    const dateStr = cell.getAttribute('data-date');
-                    if (dateStr) {
-                        const cellDate = new Date(dateStr);
-                        const cellDateOnly = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
-                        
-                        // Check if date is in the past (and not already an off-day)
-                        if (cellDateOnly < today && !cell.classList.contains('off-day')) {
-                            cell.classList.add('past-date');
-                        }
-                    }
-                });
-            },
-            
-            // Check points balance
+
+            // Check points
             async checkPoints() {
                 try {
                     const response = await fetch('/api/check-points');
@@ -1695,27 +1810,92 @@
                     console.error('Error checking points:', error);
                 }
             },
-            
-            // Mobile responsive adjustments
-            updateForMobile() {
-                const calendarGrid = document.querySelector('.calendar-grid');
-                if (window.innerWidth <= 768 && calendarGrid) {
-                    calendarGrid.style.gap = '5px';
+
+            // Password change
+            async changePassword() {
+                const currentPassword = document.getElementById('currentPassword').value.trim();
+                const newPassword = document.getElementById('newPassword').value.trim();
+                const confirmPassword = document.getElementById('confirmPassword').value.trim();
+                const messageDiv = document.getElementById('passwordMessage');
+                const btn = document.getElementById('changePasswordBtn');
+                
+                messageDiv.innerHTML = '';
+                
+                if (!currentPassword || !newPassword || !confirmPassword) {
+                    this.showPasswordMessage('All fields are required', 'error');
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    this.showPasswordMessage('New password must be at least 6 characters long', 'error');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    this.showPasswordMessage('New passwords do not match', 'error');
+                    return;
+                }
+                
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+                
+                try {
+                    const response = await fetch('/change-password', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            current_password: currentPassword,
+                            new_password: newPassword
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showPasswordMessage(data.message, 'success');
+                        document.getElementById('currentPassword').value = '';
+                        document.getElementById('newPassword').value = '';
+                        document.getElementById('confirmPassword').value = '';
+                        this.checkPasswordStrength();
+                    } else {
+                        this.showPasswordMessage(data.error || 'Failed to change password', 'error');
+                    }
+                } catch (error) {
+                    this.showPasswordMessage('Network error. Please try again.', 'error');
+                    console.error('Password change error:', error);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save"></i> Update Password';
                 }
             },
-            
+
+            showPasswordMessage(text, type) {
+                const messageDiv = document.getElementById('passwordMessage');
+                const color = type === 'success' ? '#28a745' : '#dc3545';
+                const bgColor = type === 'success' ? '#d4edda' : '#f8d7da';
+                
+                messageDiv.innerHTML = `<div style="padding: 12px; border-radius: 8px; background: ${bgColor}; color: ${color}; border: 1px solid ${color}20;">${text}</div>`;
+                setTimeout(() => messageDiv.innerHTML = '', 5000);
+            },
+
+            setupPasswordStrength() {
+                // Already handled by event listener
+            },
+
             // Cancel appointment functions
             openCancelModal(appointmentId, service, appointmentTimeStr) {
-                this.appointmentToCancel = appointmentId;
-                this.appointmentCancelTime = new Date(appointmentTimeStr);
+                this.state.appointmentToCancel = appointmentId;
+                this.state.appointmentCancelTime = new Date(appointmentTimeStr);
                 const now = new Date();
-                const hoursUntilAppointment = (this.appointmentCancelTime - now) / (1000 * 60 * 60);
+                const hoursUntilAppointment = (this.state.appointmentCancelTime - now) / (1000 * 60 * 60);
                 
-                const timeString = this.appointmentCancelTime.toLocaleTimeString('en-US', {
+                const timeString = this.state.appointmentCancelTime.toLocaleTimeString('en-US', {
                     hour: '2-digit',
                     minute: '2-digit'
                 });
-                const dateString = this.appointmentCancelTime.toLocaleDateString('en-US', {
+                const dateString = this.state.appointmentCancelTime.toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
@@ -1732,12 +1912,10 @@
                 const warningBox = document.getElementById('timeWarningBox');
                 
                 if (hoursUntilAppointment < 2) {
-                    // Within 2 hours - deduct 5 points
                     message += `<p style="margin-top: 15px; font-weight: 600; color: #dc3545;">
                         <i class="fas fa-exclamation-triangle"></i> You're cancelling within 2 hours of your appointment.</p>`;
                     warningBox.style.display = 'block';
                 } else {
-                    // More than 2 hours before - full refund
                     message += `<p style="margin-top: 15px; font-weight: 600; color: #28a745;">
                         <i class="fas fa-check-circle"></i> You're cancelling more than 2 hours before your appointment. 10 points will be refunded.</p>`;
                     warningBox.style.display = 'none';
@@ -1746,21 +1924,20 @@
                 document.getElementById('modalMessage').innerHTML = message;
                 document.getElementById('cancelModal').style.display = 'flex';
             },
-            
+
             closeCancelModal() {
                 document.getElementById('cancelModal').style.display = 'none';
-                this.appointmentToCancel = null;
-                this.appointmentCancelTime = null;
+                this.state.appointmentToCancel = null;
+                this.state.appointmentCancelTime = null;
                 document.getElementById('timeWarningBox').style.display = 'none';
             },
-            
+
             async confirmCancellation() {
-                if (!this.appointmentToCancel) return;
+                if (!this.state.appointmentToCancel) return;
                 
                 const cancelBtn = document.querySelector('.modal-buttons .btn-danger');
                 const originalText = cancelBtn.innerHTML;
                 
-                // Show loading
                 cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
                 cancelBtn.disabled = true;
                 
@@ -1771,7 +1948,7 @@
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            appointment_id: this.appointmentToCancel
+                            appointment_id: this.state.appointmentToCancel
                         })
                     });
                     const data = await response.json();
@@ -1780,9 +1957,9 @@
                         this.showNotification(data.message, 'success');
                         this.closeCancelModal();
                         this.updatePointsDisplay(data.new_points);
-                        this.updateAppointmentUI(this.appointmentToCancel, data.points_refunded);
+                        this.updateAppointmentUI(this.state.appointmentToCancel, data.points_refunded);
                     } else {
-                        this.showNotification(data.error, 'error');
+                        this.showNotification(data.error || 'Failed to cancel appointment', 'error');
                         cancelBtn.innerHTML = originalText;
                         cancelBtn.disabled = false;
                     }
@@ -1792,7 +1969,7 @@
                     cancelBtn.disabled = false;
                 }
             },
-            
+
             updatePointsDisplay(newPoints) {
                 const pointsBadge = document.getElementById('pointsBadge');
                 const currentPoints = document.getElementById('currentPoints');
@@ -1803,18 +1980,16 @@
                     currentPoints.textContent = newPoints;
                 }
             },
-            
+
             updateAppointmentUI(appointmentId, pointsRefunded) {
                 const appointmentItem = document.getElementById(`appointment-${appointmentId}`);
                 if (appointmentItem) {
-                    // Update status
                     const statusBadge = appointmentItem.querySelector('.status-badge');
                     if (statusBadge) {
                         statusBadge.className = 'status-badge status-cancelled';
                         statusBadge.textContent = 'Cancelled';
                     }
                     
-                    // Add cancellation info
                     const now = new Date();
                     const cancellationInfo = document.createElement('div');
                     cancellationInfo.className = 'cancellation-info';
@@ -1830,32 +2005,27 @@
                         <br>Refunded: ${pointsRefunded} points
                     `;
                     
-                    // Remove actions and add cancellation info
                     const actions = appointmentItem.querySelector('.appointment-actions');
-                    if (actions) {
-                        actions.remove();
-                    }
+                    if (actions) actions.remove();
                     
-                    // Add cancellation info before the appointment details
                     const details = appointmentItem.querySelector('.appointment-details');
                     if (details) {
                         appointmentItem.insertBefore(cancellationInfo, details.nextSibling);
                     }
                 }
             },
-            
+
             // Show notification
             showNotification(message, type = 'success') {
-                // Remove any existing notifications
                 document.querySelectorAll('.custom-notification').forEach(el => el.remove());
                 
-                // Create notification
                 const notification = document.createElement('div');
                 notification.className = `custom-notification ${type}`;
                 
-                // Set icon based on type
                 const icon = type === 'success' ? '✓' : '✗';
                 const title = type === 'success' ? 'Success!' : 'Error!';
+                const color = type === 'success' ? '#28a745' : '#dc3545';
+                const bgColor = type === 'success' ? '#d4edda' : '#f8d7da';
                 
                 notification.innerHTML = `
                     <div style="display: flex; align-items: flex-start; gap: 12px;">
@@ -1871,55 +2041,25 @@
                     </div>
                 `;
                 
-                // Apply styles
-                notification.style.borderLeftColor = type === 'success' ? '#28a745' : '#dc3545';
-                notification.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
+                notification.style.borderLeftColor = color;
+                notification.style.backgroundColor = bgColor;
                 notification.style.color = type === 'success' ? '#155724' : '#721c24';
                 
                 document.body.appendChild(notification);
                 
-                // Auto remove after 5 seconds
                 setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.remove();
-                    }
+                    if (notification.parentNode) notification.remove();
                 }, 5000);
             }
         };
-        
-        // Global functions for onclick handlers
-        function selectDate(date, element) {
-            DashboardApp.selectDate(date, element);
-        }
-        
-        function selectTime(datetime, element) {
-            DashboardApp.selectTime(datetime, element);
-        }
-        
-        function bookAppointment() {
-            DashboardApp.bookAppointment();
-        }
-        
-        function copyReferralLink() {
-            DashboardApp.copyReferralLink();
-        }
-        
-        function openCancelModal(appointmentId, service, appointmentTimeStr) {
-            DashboardApp.openCancelModal(appointmentId, service, appointmentTimeStr);
-        }
-        
-        function closeCancelModal() {
-            DashboardApp.closeCancelModal();
-        }
-        
-        function confirmCancellation() {
-            DashboardApp.confirmCancellation();
-        }
-        
-        // Initialize the dashboard when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            DashboardApp.init();
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            Dashboard.init();
         });
+
+        // Make Dashboard globally available
+        window.Dashboard = Dashboard;
     </script>
 </body>
 </html>

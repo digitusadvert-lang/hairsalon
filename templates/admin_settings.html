@@ -22,7 +22,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             width: 100%;
             background: white;
             border-radius: 15px;
@@ -58,7 +58,7 @@
         }
         
         .nav-container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 0 30px;
         }
@@ -475,7 +475,7 @@
         <div class="header">
             <div class="welcome-section">
                 <div>
-                    <h1>HS Salon System Settings</h1>
+                    <h1>System Settings</h1>
                     <p class="header-subtitle">Configure business settings, appointments, and integrations</p>
                 </div>
                 <div>
@@ -492,7 +492,7 @@
         <nav class="admin-nav">
             <div class="nav-container">
                 <ul>
-                    <li><a href="{{ url_for('admin_dashboard') }}">
+                    <li><a href="{{ url_for('admin_dashboard') }}" class="active">
                         <i class="fas fa-tachometer-alt"></i> Dashboard
                     </a></li>
                     <li><a href="{{ url_for('admin_appointments') }}">
@@ -501,10 +501,15 @@
                     <li><a href="{{ url_for('admin_customers') }}">
                         <i class="fas fa-users"></i> Customers
                     </a></li>
-                    <li><a href="{{ url_for('admin_settings') }}" class="active">
+                    <li><a href="{{ url_for('admin_services') }}">
+                        <i class="fas fa-cut"></i> Services
+                    </a></li>
+                    <li><a href="{{ url_for('admin_settings') }}">
                         <i class="fas fa-cog"></i> Settings
                     </a></li>
-                    <li><a href="{{ url_for('admin_off_days') }}"><i class="fas fa-calendar-times"></i> Off Days</a></li>
+                    <li><a href="{{ url_for('admin_off_days') }}">
+                        <i class="fas fa-calendar-times"></i> Off Days
+                    </a></li>
                 </ul>
             </div>
         </nav>

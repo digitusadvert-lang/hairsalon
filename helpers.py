@@ -1,16 +1,11 @@
-# helpers.py
-from datetime import datetime, timedelta
-from models import SalonSettings, OffDay
-from datetime import datetime, date, time, timedelta
-from sqlalchemy import func
+from datetime import datetime, timedelta, date, time
 import random
 import string
 import requests
 
-# Import models
-from models import db, Customer, Appointment, Referral, SalonSettings
-
-# Remove any "from config import db" lines
+# Import db from models instead of app
+from models import db, SalonSettings, OffDay, Appointment, Customer, Referral, TelegramChat, PointsHistory
+from sqlalchemy import func
 
 def generate_referral_code(length=8):
     """Generate random referral code"""
@@ -146,8 +141,11 @@ def is_off_day(check_date):
     
     return weekly_off is not None or specific_off is not None
 
-def get_available_time_slots(date_obj):
-    """Get available time slots for a date"""
+def get_available_time_slots(date_obj, service_duration=None):
+    """
+    Get available time slots for a specific date.
+    If service_duration is provided, returns slots that can accommodate that duration.
+    """
     # Check if it's an off day
     if is_off_day(date_obj):
         return []
@@ -193,53 +191,60 @@ def get_available_time_slots(date_obj):
     
     # Get existing appointments for this date
     existing_appointments = Appointment.query.filter(
-        db.func.date(Appointment.appointment_time) == date_obj,
+        func.date(Appointment.appointment_time) == date_obj,
         Appointment.status.in_(['pending', 'confirmed'])
-    ).all()
+    ).order_by(Appointment.appointment_time).all()
     
-    # Create list of booked time ranges
-    booked_ranges = []
-    for appointment in existing_appointments:
-        appointment_end = appointment.appointment_time + timedelta(minutes=appointment.duration)
-        booked_ranges.append({
-            'start': appointment.appointment_time,
-            'end': appointment_end
-        })
+    # Create list of busy intervals
+    busy_intervals = []
+    for apt in existing_appointments:
+        apt_start = apt.appointment_time
+        apt_end = apt.appointment_time + timedelta(minutes=apt.duration)
+        busy_intervals.append((apt_start, apt_end))
     
-    # Generate time slots
-    time_slots = []
+    # Generate all possible time slots
+    available_slots = []
+    
+    # Use provided service duration or default from settings
+    slot_duration = service_duration if service_duration else salon_settings.appointment_duration
+    
+    # Start from the beginning of working hours
     current_dt = datetime.combine(date_obj, start_time)
     end_dt = datetime.combine(date_obj, end_time)
-    appointment_duration = salon_settings.appointment_duration
     
     # Debug: Print working hours
     print(f"DEBUG: Working hours - Start: {start_time}, End: {end_time}")
-    print(f"DEBUG: Appointment duration: {appointment_duration} minutes")
+    print(f"DEBUG: Requested duration: {slot_duration} minutes")
     print(f"DEBUG: Buffer time: {buffer} minutes")
     print(f"DEBUG: Date: {date_obj}")
     
-    while current_dt + timedelta(minutes=appointment_duration) <= end_dt:
-        slot_end = current_dt + timedelta(minutes=appointment_duration)
+    # Generate slots in 15-minute increments
+    while current_dt + timedelta(minutes=slot_duration) <= end_dt:
+        slot_end = current_dt + timedelta(minutes=slot_duration)
         
         # Check if slot conflicts with existing appointments
-        slot_available = True
-        for booked in booked_ranges:
-            # Check for time overlap
-            if (current_dt < booked['end'] and slot_end > booked['start']):
-                slot_available = False
+        is_available = True
+        for busy_start, busy_end in busy_intervals:
+            # Check for overlap
+            if not (slot_end <= busy_start or current_dt >= busy_end):
+                is_available = False
                 break
         
-        if slot_available:
-            time_slots.append({
+        if is_available:
+            available_slots.append({
                 'time': current_dt.strftime('%I:%M %p'),
-                'datetime': current_dt
+                'datetime': current_dt,
+                'end_time': slot_end.strftime('%I:%M %p'),
+                'duration': slot_duration
             })
-        
-        # Move to next slot (appointment duration + buffer)
-        current_dt += timedelta(minutes=appointment_duration + buffer)
+            # Move to next slot (15 minutes)
+            current_dt += timedelta(minutes=15)
+        else:
+            # Move to next 15-minute slot
+            current_dt += timedelta(minutes=15)
     
-    print(f"DEBUG: Generated {len(time_slots)} time slots")
-    return time_slots
+    print(f"DEBUG: Generated {len(available_slots)} time slots for {slot_duration}min service")
+    return available_slots
 
 def award_referral_points(referred_id):
     """Award referral points when a referred customer completes their first appointment"""
@@ -264,7 +269,6 @@ def award_referral_points(referred_id):
                 referrer.points += 10  # Award 10 points for successful referral
                 
                 # Log to points history
-                from models import PointsHistory
                 points_history = PointsHistory(
                     customer_id=referrer.id,
                     old_points=old_points,
@@ -331,15 +335,6 @@ def send_telegram_to_customer(customer, message):
         return send_telegram_message(customer.telegram_id, message)
     return False
 
-def send_telegram_to_customer(customer, message):
-    """Send Telegram message to customer"""
-    if customer and customer.telegram_id:
-        telegram_chat = TelegramChat.query.filter_by(telegram_username=customer.telegram_id).first()
-        if telegram_chat and telegram_chat.chat_id:
-            return send_telegram_message(telegram_chat.chat_id, message)
-    
-    return None
-
 def send_appointment_confirmation(customer, appointment):
     """Send appointment confirmation via Telegram"""
     end_time = appointment.end_time or appointment.appointment_time + timedelta(minutes=appointment.duration)
@@ -351,6 +346,7 @@ def send_appointment_confirmation(customer, appointment):
 💇 *Service:* {appointment.service_type}
 📅 *Date:* {appointment.appointment_time.strftime('%d %b %Y')}
 ⏰ *Time:* {appointment.appointment_time.strftime('%I:%M %p')} - {end_time.strftime('%I:%M %p')}
+⏱️ *Duration:* {appointment.duration} minutes
 💰 *Points used:* {appointment.points_deducted}
 🎯 *Remaining points:* {customer.points}
 
@@ -359,6 +355,6 @@ def send_appointment_confirmation(customer, appointment):
     send_telegram_to_customer(customer, message)
     
     salon_settings = SalonSettings.query.first()
-    if salon_settings.telegram_chat_id:
-        admin_msg = f"📋 *New Appointment Booked!*\n\n👤 {customer.name}\n💇 {appointment.service_type}\n📅 {appointment.appointment_time.strftime('%d %b %Y %I:%M %p')}"
+    if salon_settings and salon_settings.telegram_chat_id:
+        admin_msg = f"📋 *New Appointment Booked!*\n\n👤 {customer.name}\n💇 {appointment.service_type}\n⏱️ {appointment.duration} min\n📅 {appointment.appointment_time.strftime('%d %b %Y %I:%M %p')}"
         send_telegram_message(salon_settings.telegram_chat_id, admin_msg)

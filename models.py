@@ -1,3 +1,4 @@
+# models.py
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -23,13 +24,45 @@ class Customer(db.Model):
     referrals = db.relationship('Referral', foreign_keys='Referral.referrer_id', backref='referrer', lazy=True)
     appointments = db.relationship('Appointment', backref='customer', lazy=True)
     points_history = db.relationship('PointsHistory', backref='customer', lazy=True)
+    
+    def __repr__(self):
+        return f'<Customer {self.name}>'
+
+class Service(db.Model):
+    """Service model for different salon services with durations"""
+    __tablename__ = 'services'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    duration = db.Column(db.Integer, nullable=False)  # Duration in minutes
+    description = db.Column(db.Text, nullable=True)
+    price = db.Column(db.Float, nullable=True)  # Optional price field
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships - fixed backref name to avoid conflict
+    appointments = db.relationship('Appointment', back_populates='service', lazy=True)
+    
+    def __repr__(self):
+        return f'<Service {self.name} ({self.duration}min)>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'duration': self.duration,
+            'description': self.description,
+            'price': self.price,
+            'is_active': self.is_active
+        }
 
 class Appointment(db.Model):
     __tablename__ = 'appointment'
     
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
-    service_type = db.Column(db.String(100), nullable=False)
+    service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=True)
+    service_type = db.Column(db.String(100), nullable=False)  # Keep for backward compatibility
     appointment_time = db.Column(db.DateTime, nullable=False)
     end_time = db.Column(db.DateTime, nullable=False)
     duration = db.Column(db.Integer, default=60)  # in minutes
@@ -40,6 +73,12 @@ class Appointment(db.Model):
     cancelled_at = db.Column(db.DateTime, nullable=True)
     admin_cancelled = db.Column(db.Boolean, default=False)
     cancellation_reason = db.Column(db.String(200), nullable=True)
+    
+    # Relationships - fixed to use back_populates
+    service = db.relationship('Service', back_populates='appointments')
+    
+    def __repr__(self):
+        return f'<Appointment {self.id}: {self.service_type} at {self.appointment_time}>'
 
 class Referral(db.Model):
     __tablename__ = 'referral'
@@ -53,6 +92,9 @@ class Referral(db.Model):
     
     # Relationships
     referred = db.relationship('Customer', foreign_keys=[referred_id], backref='referred_by_record')
+    
+    def __repr__(self):
+        return f'<Referral {self.referral_code}>'
 
 class SalonSettings(db.Model):
     __tablename__ = 'salon_settings'
@@ -67,17 +109,23 @@ class SalonSettings(db.Model):
     telegram_bot_token = db.Column(db.String(100), nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     off_days = db.relationship('OffDay', backref='salon_settings', lazy=True, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<SalonSettings {self.business_name}>'
 
 class TelegramChat(db.Model):
     __tablename__ = 'telegram_chat'
     
     id = db.Column(db.Integer, primary_key=True)
-    chat_id = db.Column(db.String(50), nullable=False)
+    chat_id = db.Column(db.String(50), nullable=False, unique=True)
     first_name = db.Column(db.String(100), nullable=True)
     last_name = db.Column(db.String(100), nullable=True)
     username = db.Column(db.String(100), nullable=True)
     chat_type = db.Column(db.String(20), nullable=False)  # private, group, channel
     registered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<TelegramChat {self.chat_id}>'
 
 class PointsHistory(db.Model):
     __tablename__ = 'points_history'
@@ -90,6 +138,9 @@ class PointsHistory(db.Model):
     reason = db.Column(db.String(255))
     changed_by = db.Column(db.String(50), default='admin')  # 'admin', 'system', 'appointment', etc.
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<PointsHistory {self.customer_id}: {self.difference}>'
 
 class OffDay(db.Model):
     __tablename__ = 'off_days'

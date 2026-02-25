@@ -67,6 +67,7 @@
             list-style: none;
             display: flex;
             gap: 1px;
+            flex-wrap: wrap;
         }
         
         .admin-nav a {
@@ -480,8 +481,8 @@
         <div class="header">
             <div class="welcome-section">
                 <div>
-                    <h1>HS Salon Admin Dashboard</h1>
-                    <p class="header-subtitle">Manage appointments, customers, and system settings</p>
+                    <h1>Admin Dashboard</h1>
+                    <p class="header-subtitle">Manage appointments, customers, services, and system settings</p>
                 </div>
                 <div>
                     <a href="{{ url_for('admin_logout') }}" class="logout-btn">
@@ -505,10 +506,15 @@
                     <li><a href="{{ url_for('admin_customers') }}">
                         <i class="fas fa-users"></i> Customers
                     </a></li>
+                    <li><a href="{{ url_for('admin_services') }}">
+                        <i class="fas fa-cut"></i> Services
+                    </a></li>
                     <li><a href="{{ url_for('admin_settings') }}">
                         <i class="fas fa-cog"></i> Settings
                     </a></li>
-                    <li><a href="{{ url_for('admin_off_days') }}"><i class="fas fa-calendar-times"></i> Off Days</a></li>
+                    <li><a href="{{ url_for('admin_off_days') }}">
+                        <i class="fas fa-calendar-times"></i> Off Days
+                    </a></li>
                 </ul>
             </div>
         </nav>
@@ -548,6 +554,13 @@
                     <div class="number">{{ today_appointments }}</div>
                     <h3>Today's Appointments</h3>
                 </div>
+                
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-cut"></i></div>
+                    <div class="number">{{ total_services }}</div>
+                    <h3>Total Services</h3>
+                    <div style="font-size: 12px; color: #666;">{{ active_services }} Active</div>
+                </div>
             </div>
             
             <!-- Today's Appointments Card -->
@@ -561,6 +574,7 @@
                                 <th>Time</th>
                                 <th>Customer</th>
                                 <th>Service</th>
+                                <th>Duration</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -576,6 +590,7 @@
                                     <div class="customer-info">{{ appointment.customer.phone }}</div>
                                 </td>
                                 <td>{{ appointment.service_type }}</td>
+                                <td>{{ appointment.duration }} min</td>
                                 <td>
                                     <span class="status-badge status-{{ appointment.status }}">
                                         {{ appointment.status|title }}
@@ -623,6 +638,7 @@
                                 <th>Date & Time</th>
                                 <th>Customer</th>
                                 <th>Service</th>
+                                <th>Duration</th>
                                 <th>Status</th>
                                 <th>Points</th>
                             </tr>
@@ -638,6 +654,7 @@
                                 </td>
                                 <td>{{ appointment.customer.name }}</td>
                                 <td>{{ appointment.service_type }}</td>
+                                <td>{{ appointment.duration }} min</td>
                                 <td>
                                     <span class="status-badge status-{{ appointment.status }}">
                                         {{ appointment.status|title }}
@@ -667,11 +684,14 @@
                     <a href="{{ url_for('admin_customers') }}" class="btn">
                         <i class="fas fa-users"></i> View All Customers
                     </a>
+                    <a href="{{ url_for('admin_services') }}" class="btn">
+                        <i class="fas fa-cut"></i> Manage Services
+                    </a>
                     <a href="{{ url_for('admin_settings') }}" class="btn">
                         <i class="fas fa-cog"></i> System Settings
                     </a>
-                    <a href="{{ url_for('admin_appointments') }}" class="btn btn-success">
-                        <i class="fas fa-calendar-plus"></i> Manage Appointments
+                    <a href="{{ url_for('admin_off_days') }}" class="btn">
+                        <i class="fas fa-calendar-times"></i> Manage Off Days
                     </a>
                 </div>
             </div>

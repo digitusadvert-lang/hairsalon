@@ -3,276 +3,756 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hair Salon Booking</title>
+    <title>HS Salon - Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}" media="(max-width: 768px)">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
             padding: 20px;
             color: #333;
         }
         
         .container {
-            max-width: 1000px;
-            margin: 0 auto;
+            max-width: 1400px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            margin: 20px auto;
         }
         
         .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
+            background: linear-gradient(135deg, #0d1b3e 0%, #1a3a7a 100%);
+            color: white;
+            padding: 30px;
+            position: relative;
         }
         
         .header h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
+            margin: 0;
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
         
-        .welcome-message {
-            text-align: center;
-            background: white;
-            padding: 20px;
-            margin-bottom: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .content {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            justify-content: center;
-        }
-        
-        .registration-box {
-            flex: 1;
-            min-width: 400px;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .telegram-box {
-            flex: 1;
-            min-width: 300px;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        input[type="text"],
-        input[type="tel"],
-        input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
+        .header-subtitle {
+            margin: 8px 0 0;
+            opacity: 0.9;
             font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
+            font-weight: 300;
         }
         
-        .btn:hover {
-            background-color: #2980b9;
+        .welcome-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
         }
         
-        .telegram-info {
-            text-align: center;
-            padding: 20px;
-            background: linear-gradient(135deg, #0088cc, #00aced);
+        .points-badge {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
             color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .dashboard-btn {
+            background: #2ecc71;
+            color: white;
+            padding: 12px 24px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .login-link {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        
-        .login-link a {
-            color: #3498db;
+        .dashboard-btn:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+            color: white;
             text-decoration: none;
         }
         
-        .flash-message {
-            padding: 10px;
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #eaeaea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #1a3a7a;
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f4f8;
+        }
+        
+        .card h2 i {
+            color: #2a5298;
+            font-size: 22px;
+        }
+        
+        .card h3 {
+            color: #1a3a7a;
+            font-size: 18px;
+            margin: 20px 0 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 25px;
+            padding: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+        }
+        
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            color: #6c757d;
+            z-index: 1;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        
+        .form-text {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+            display: block;
+        }
+        
+        /* Button Styles */
+        .btn {
+            background: linear-gradient(135deg, #2a5298 0%, #1a3a7a 100%);
+            color: white;
+            padding: 14px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #1a3a7a 0%, #0d1b3e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(42, 82, 152, 0.3);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #1e7e34 0%, #145523 100%);
+        }
+        
+        .btn-telegram {
+            background: linear-gradient(135deg, #0088cc 0%, #006699 100%);
+        }
+        
+        .btn-telegram:hover {
+            background: linear-gradient(135deg, #006699 0%, #004d66 100%);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #2a5298;
+            color: #2a5298;
+        }
+        
+        .btn-outline:hover {
+            background: #2a5298;
+            color: white;
+        }
+        
+        /* Telegram Box */
+        .telegram-info {
+            background: linear-gradient(135deg, #0088cc, #006699);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .telegram-info h3 {
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 22px;
+        }
+        
+        .telegram-info p {
+            opacity: 0.9;
             margin: 10px 0;
-            border-radius: 4px;
         }
         
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .telegram-steps {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
         }
         
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .feature-list {
-            list-style: none;
+        .telegram-steps ol {
+            margin: 10px 0 0 20px;
             padding: 0;
         }
         
+        .telegram-steps li {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .telegram-steps code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        /* Feature List */
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        
         .feature-list li {
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #495057;
         }
         
         .feature-list li:last-child {
             border-bottom: none;
         }
         
+        .feature-list i {
+            color: #28a745;
+            width: 20px;
+            font-size: 14px;
+        }
+        
+        /* Stats Mini Cards */
+        .stats-mini {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .stat-mini-item {
+            background: #f8f9fa;
+            padding: 15px 10px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 3px solid #2a5298;
+        }
+        
+        .stat-mini-item .number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a3a7a;
+            margin-bottom: 5px;
+        }
+        
+        .stat-mini-item .label {
+            font-size: 11px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Login Link */
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f4f8;
+        }
+        
+        .login-link a {
+            color: #2a5298;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .login-link a:hover {
+            color: #1a3a7a;
+            text-decoration: underline;
+        }
+        
+        /* Flash Messages */
+        .flash-message {
+            padding: 15px 20px;
+            margin: 20px 30px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .flash-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Welcome Message */
+        .welcome-message {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-radius: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .welcome-message h2 {
+            color: #1a3a7a;
+            font-size: 20px;
+            margin: 0;
+        }
+        
+        .welcome-message p {
+            color: #6c757d;
+            margin: 5px 0 0 0;
+        }
+        
+        /* Responsive */
         @media (max-width: 768px) {
-            .content {
-                flex-direction: column;
+            .header {
+                padding: 20px;
             }
             
-            .registration-box,
-            .telegram-box {
-                min-width: 100%;
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .welcome-section {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .welcome-message {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stats-mini {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .telegram-info {
+                padding: 20px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
-            <h1>Hair Salon Booking</h1>
-            <p>Book appointments, earn points, refer friends!</p>
+            <div class="welcome-section">
+                <div>
+                    <h1>HS Salon</h1>
+                    <p class="header-subtitle">Premium Hair Care & Styling</p>
+                </div>
+                {% if session.get('customer_name') %}
+                <div class="points-badge">
+                    <i class="fas fa-coins"></i>
+                    {{ session.get('customer_points', 0) }} Points
+                </div>
+                {% endif %}
+            </div>
         </div>
         
+        <!-- Welcome Message for Logged-in Users -->
         {% if session.get('customer_name') %}
         <div class="welcome-message">
-            <h2>Welcome back, {{ session['customer_name'] }}!</h2>
-            <p>You have {{ session.get('customer_points', 0) }} points.</p>
-            <a href="{{ url_for('dashboard') }}" style="display: inline-block; background: #2ecc71; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 10px;">
-                Go to Dashboard
-            </a>
+            <div>
+                <h2><i class="fas fa-hand-peace" style="color: #2a5298;"></i> Welcome back, {{ session['customer_name'] }}!</h2>
+                <p>Your next appointment is just a click away</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <a href="{{ url_for('dashboard') }}" class="dashboard-btn">
+                    <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                </a>
+                <a href="{{ url_for('logout') }}" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
         </div>
         {% endif %}
         
+        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="flash-message {{ category }}">{{ message }}</div>
+                    <div class="flash-message {{ category }}">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                    </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
         
-        <div class="content">
-            <div class="registration-box">
-                <h2>New Customer Registration</h2>
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Registration Card -->
+            <div class="card">
+                <h2>
+                    <i class="fas fa-user-plus"></i>
+                    New Customer Registration
+                </h2>
+                
                 <form action="{{ url_for('register') }}" method="POST">
                     <div class="form-group">
-                        <label for="name">Full Name</label>
-                        <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                        <label for="name">
+                            <i class="fas fa-user"></i> Full Name
+                        </label>
+                        <div class="input-group">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" id="name" name="name" class="form-control" 
+                                   placeholder="Enter your full name" required>
+                        </div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="phone">Phone Number *</label>
-                        <input type="tel" id="phone" name="phone" 
-                               pattern="^(\+?6?01[0-9]{8,9}|0[0-9]{9,10})$"
-                               title="Enter a valid Malaysian phone number (e.g., 012-3456789 or 0123456789)"
-                               placeholder="012-3456789 or 0123456789" 
-                               required>
-                        <small class="form-text text-muted">
-                            Accepts: 012-3456789, 0123456789, +60123456789, 60123456789
+                        <label for="phone">
+                            <i class="fas fa-phone"></i> Phone Number *
+                        </label>
+                        <div class="input-group">
+                            <i class="fas fa-phone-alt input-icon"></i>
+                            <input type="tel" id="phone" name="phone" class="form-control" 
+                                   pattern="^(\+?6?01[0-9]{8,9}|0[0-9]{9,10})$"
+                                   title="Enter a valid Malaysian phone number"
+                                   placeholder="012-3456789 or 0123456789" 
+                                   value="{{ referral_code and request.args.get('phone', '') }}"
+                                   required>
+                        </div>
+                        <small class="form-text">
+                            <i class="fas fa-info-circle"></i> Format: 012-3456789, 0123456789, +60123456789
                         </small>
                     </div>
                     
                     <div class="form-group">
-                        <label for="telegram">Telegram Username (Optional)</label>
-                        <input type="text" id="telegram" name="telegram" placeholder="@username">
+                        <label for="telegram">
+                            <i class="fab fa-telegram"></i> Telegram Username (Optional)
+                        </label>
+                        <div class="input-group">
+                            <i class="fab fa-telegram input-icon"></i>
+                            <input type="text" id="telegram" name="telegram" class="form-control" 
+                                   placeholder="@username">
+                        </div>
+                        <small class="form-text">Get instant notifications via Telegram</small>
                     </div>
                     
                     <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" placeholder="At least 6 characters" required>
+                        <label for="password">
+                            <i class="fas fa-lock"></i> Password
+                        </label>
+                        <div class="input-group">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="password" name="password" class="form-control" 
+                                   placeholder="At least 6 characters" required>
+                        </div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="confirm_password">Confirm Password</label>
-                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password" required>
+                        <label for="confirm_password">
+                            <i class="fas fa-lock"></i> Confirm Password
+                        </label>
+                        <div class="input-group">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="confirm_password" name="confirm_password" class="form-control" 
+                                   placeholder="Re-enter password" required>
+                        </div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="referral_code">Referral Code (Optional)</label>
-                        <input type="text" id="referral_code" name="referral_code" placeholder="Enter referral code" value="{{ referral_code }}">
+                        <label for="referral_code">
+                            <i class="fas fa-gift"></i> Referral Code (Optional)
+                        </label>
+                        <div class="input-group">
+                            <i class="fas fa-tag input-icon"></i>
+                            <input type="text" id="referral_code" name="referral_code" class="form-control" 
+                                   placeholder="Enter referral code" value="{{ referral_code }}">
+                        </div>
+                        <small class="form-text">Get bonus points when you use a referral code</small>
                     </div>
                     
-                    <button type="submit" class="btn">Register</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check-circle"></i> Register Now
+                    </button>
                 </form>
                 
                 <div class="login-link">
-                    Already have an account? <a href="{{ url_for('login_page') }}">Login here</a>
+                    <a href="{{ url_for('login_page') }}">
+                        <i class="fas fa-sign-in-alt"></i> Already have an account? Login here
+                    </a>
                 </div>
             </div>
             
-            <div class="telegram-box">
+            <!-- Telegram Info Card -->
+            <div class="card">
+                <h2>
+                    <i class="fab fa-telegram"></i>
+                    Telegram Integration
+                </h2>
+                
                 <div class="telegram-info">
-                    <h3>Telegram Notifications</h3>
-                    <p>Get instant appointment confirmations!</p>
-                    <p><strong>Steps to connect:</strong></p>
-                    <ol style="text-align: left; margin: 10px 0; padding-left: 20px;">
-                        <li>Click the button below to open our bot</li>
-                        <li>Click <strong>START</strong> when the bot opens</li>
-                        <li>Use <code>/link +60123456789</code> to link your account</li>
-                        <li>Replace with your actual phone number</li>
-                    </ol>
-                    <a href="https://t.me/hsalonbot" target="_blank" class="btn" style="background-color: #0088cc;">
+                    <h3><i class="fab fa-telegram"></i> @hsalonbot</h3>
+                    <p>Get instant appointment confirmations and reminders!</p>
+                    
+                    <div class="telegram-steps">
+                        <strong>📱 How to connect:</strong>
+                        <ol>
+                            <li>Click the button below to open our bot</li>
+                            <li>Click <strong>START</strong> when the bot opens</li>
+                            <li>Use <code>/link +60123456789</code> to link your account</li>
+                            <li>Replace with your actual phone number</li>
+                        </ol>
+                    </div>
+                    
+                    <a href="{{ TELEGRAM_BOT_LINK }}" target="_blank" class="btn btn-telegram" style="width: 100%;">
                         <i class="fab fa-telegram"></i> Open @hsalonbot
                     </a>
                 </div>
                 
-                <h3>Welcome back, Master!</h3>
+                <h3>
+                    <i class="fas fa-star"></i>
+                    Why Choose HS Salon?
+                </h3>
+                
                 <ul class="feature-list">
-                    <li>✓ New Customer Registration</li>
-                    <li>✓ Returning Customer Login</li>
-                    <li>✓ Already have an account?</li>
-                    <li>✓ Login with Phone Number</li>
-                    <li>✓ Use the same phone number you registered with</li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Easy online booking system</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Earn points with every visit</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Refer friends and get bonus points</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Telegram appointment reminders</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Professional stylists</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <span>Premium products used</span>
+                    </li>
                 </ul>
                 
-                <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; color: #666;">
-                    <p>HS Salon Admin</p>
+                <!-- Points System Preview -->
+                <div class="stats-mini">
+                    <div class="stat-mini-item">
+                        <div class="number">10</div>
+                        <div class="label">Signup Bonus</div>
+                    </div>
+                    <div class="stat-mini-item">
+                        <div class="number">20</div>
+                        <div class="label">Per Visit</div>
+                    </div>
+                    <div class="stat-mini-item">
+                        <div class="number">5</div>
+                        <div class="label">Per Referral</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <p style="margin: 0; color: #6c757d; font-size: 13px;">
+                        <i class="fas fa-shield-alt" style="color: #2a5298;"></i>
+                        Your data is encrypted and secure
+                    </p>
                 </div>
             </div>
+        </div>
+        
+        <!-- Footer Note -->
+        <div style="padding: 20px 30px; text-align: center; border-top: 1px solid #e9ecef; background: #f8f9fa;">
+            <p style="color: #6c757d; font-size: 13px; margin: 0;">
+                <i class="fas fa-cut"></i> HS Salon - Where Style Meets Perfection 
+                <span style="margin: 0 10px;">|</span> 
+                <i class="fas fa-clock"></i> Mon-Sat: 9am - 6pm 
+                <span style="margin: 0 10px;">|</span> 
+                <i class="fas fa-phone"></i> 012-345-6789
+            </p>
         </div>
     </div>
     
     <script>
-        // Simple form validation
+        // Form validation
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.querySelector('form');
             const password = document.getElementById('password');
@@ -294,90 +774,61 @@
                 }
             });
             
-            // Format phone number
+            // Phone number formatting
+            function formatPhoneNumber(phone) {
+                // Remove all non-digits
+                let cleaned = phone.replace(/\D/g, '');
+                
+                // Check if the number looks like a Malaysian number
+                if (cleaned.length === 10 && cleaned.startsWith('01')) {
+                    // Format as 012-3456789
+                    return cleaned.replace(/(\d{3})(\d{7})/, '$1-$2');
+                } else if (cleaned.length === 11 && cleaned.startsWith('01')) {
+                    // Format as 012-34567890
+                    return cleaned.replace(/(\d{3})(\d{8})/, '$1-$2');
+                } else if (cleaned.length === 12 && cleaned.startsWith('60')) {
+                    // Format as +60 12-3456789
+                    return '+' + cleaned.replace(/(\d{2})(\d{2})(\d{7})/, '$1 $2-$3');
+                }
+                
+                return phone;
+            }
+            
             const phoneInput = document.getElementById('phone');
-            phoneInput.addEventListener('blur', function() {
-                let phone = phoneInput.value.trim();
-                if (phone && !phone.startsWith('+')) {
-                    if (phone.startsWith('0')) {
-                        phone = '+6' + phone;
-                    } else if (phone.length >= 10) {
-                        phone = '+6' + phone;
+            if (phoneInput) {
+                // Auto-format on blur
+                phoneInput.addEventListener('blur', function() {
+                    let phone = this.value.trim();
+                    if (phone) {
+                        this.value = formatPhoneNumber(phone);
                     }
-                    phoneInput.value = phone;
+                });
+                
+                // Remove formatting on focus (for editing)
+                phoneInput.addEventListener('focus', function() {
+                    let phone = this.value.replace(/\D/g, '');
+                    if (phone.startsWith('60')) {
+                        phone = '+' + phone;
+                    }
+                    this.value = phone;
+                });
+                
+                // Format phone number on page load if it has value
+                if (phoneInput.value) {
+                    phoneInput.value = formatPhoneNumber(phoneInput.value);
                 }
-            });
+            }
+            
+            // Auto-fill referral code from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            if (refCode) {
+                const referralInput = document.getElementById('referral_code');
+                if (referralInput && !referralInput.value) {
+                    referralInput.value = refCode;
+                }
+            }
         });
-<script>
-    // Simple form validation
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('form');
-        const password = document.getElementById('password');
-        const confirmPassword = document.getElementById('confirm_password');
-        
-        form.addEventListener('submit', function(e) {
-            if (password.value.length < 6) {
-                e.preventDefault();
-                alert('Password must be at least 6 characters long');
-                password.focus();
-                return false;
-            }
-            
-            if (password.value !== confirmPassword.value) {
-                e.preventDefault();
-                alert('Passwords do not match');
-                confirmPassword.focus();
-                return false;
-            }
-        });
-        
-        // ========== ADD THIS PHONE FORMATTING CODE ==========
-        // Phone number formatting
-        function formatPhoneNumber(phone) {
-            // Remove all non-digits
-            let cleaned = phone.replace(/\D/g, '');
-            
-            // Check if the number looks like a Malaysian number
-            if (cleaned.length === 10 && cleaned.startsWith('01')) {
-                // Format as 012-3456789
-                return cleaned.replace(/(\d{3})(\d{7})/, '$1-$2');
-            } else if (cleaned.length === 11 && cleaned.startsWith('01')) {
-                // Format as 012-34567890
-                return cleaned.replace(/(\d{3})(\d{8})/, '$1-$2');
-            } else if (cleaned.length === 12 && cleaned.startsWith('60')) {
-                // Format as +60 12-3456789
-                return '+' + cleaned.replace(/(\d{2})(\d{2})(\d{7})/, '$1 $2-$3');
-            }
-            
-            return phone;
-        }
-        
-        // Auto-format on blur
-        const phoneInput = document.getElementById('phone');
-        if (phoneInput) {
-            phoneInput.addEventListener('blur', function() {
-                let phone = this.value.trim();
-                if (phone) {
-                    this.value = formatPhoneNumber(phone);
-                }
-            });
-            
-            // Remove formatting on focus (for editing)
-            phoneInput.addEventListener('focus', function() {
-                let phone = this.value.replace(/\D/g, '');
-                if (phone.startsWith('60')) {
-                    phone = '+' + phone;
-                }
-                this.value = phone;
-            });
-            
-            // Format phone number on page load if it has value
-            if (phoneInput.value) {
-                phoneInput.value = formatPhoneNumber(phoneInput.value);
-            }
-        }
-        // ========== END OF PHONE FORMATTING CODE ==========
-    });
-</script>
+    </script>
 </body>
 </html>

@@ -1,0 +1,1272 @@
+<!-- templates/admin_services.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Services Management | HS Salon</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            margin: 20px auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0d1b3e 0%, #1a3a7a 100%);
+            color: white;
+            padding: 25px 30px;
+            position: relative;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .header-subtitle {
+            margin: 8px 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+            font-weight: 300;
+        }
+        
+        .admin-nav {
+            background: #2a5298;
+            padding: 0;
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+        }
+        
+        .admin-nav ul {
+            list-style: none;
+            display: flex;
+            gap: 1px;
+            flex-wrap: wrap;
+        }
+        
+        .admin-nav a {
+            color: white;
+            text-decoration: none;
+            padding: 18px 25px;
+            display: inline-block;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 4px solid transparent;
+            font-size: 15px;
+        }
+        
+        .admin-nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .admin-nav a.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom: 4px solid #4CAF50;
+        }
+        
+        .admin-nav a i {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        
+        .welcome-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+        
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #eaeaea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 25px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #1a3a7a;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f4f8;
+        }
+        
+        .card h2 i {
+            color: #2a5298;
+            font-size: 20px;
+        }
+        
+        /* Statistics Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 5px solid #2a5298;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(42, 82, 152, 0.15);
+        }
+        
+        .stat-card h3 {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: 800;
+            color: #1a3a7a;
+            margin: 10px 0;
+            line-height: 1;
+        }
+        
+        .stat-card .icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: #2a5298;
+            opacity: 0.9;
+        }
+        
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th {
+            background: #f8fafc;
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 700;
+            color: #1a3a7a;
+            border-bottom: 3px solid #e9ecef;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+        }
+        
+        td {
+            padding: 18px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
+        }
+        
+        tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        /* Button Styles */
+        .btn {
+            background: linear-gradient(135deg, #2a5298 0%, #1a3a7a 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #1a3a7a 0%, #0d1b3e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(42, 82, 152, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #1e7e34 0%, #145523 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71d2a 100%);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #e0a800 0%, #c69500 100%);
+            color: #333;
+        }
+        
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 13px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        /* Status badges */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            letter-spacing: 0.3px;
+        }
+        
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Flash messages */
+        .flash-message {
+            padding: 18px;
+            margin: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 15px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .flash-message.info {
+            background: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            margin: 50px auto;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #0d1b3e 0%, #1a3a7a 100%);
+            color: white;
+            padding: 20px 30px;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .modal-footer {
+            background: #f8fafc;
+            padding: 20px 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1a3a7a;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+        
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        .duration-presets {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .preset-btn {
+            padding: 6px 12px;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .preset-btn:hover {
+            background: #2a5298;
+            color: white;
+            border-color: #2a5298;
+        }
+        
+        /* Info box */
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 4px solid #2196f3;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .info-box h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+        }
+        
+        .info-box p {
+            color: #2c3e50;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .info-box ul {
+            margin-left: 30px;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+        
+        .info-box li {
+            margin-bottom: 5px;
+        }
+        
+        /* Quick Actions Grid */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        /* Service info */
+        .service-name {
+            font-weight: 600;
+            color: #1a3a7a;
+        }
+        
+        .service-duration {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        
+        .price-badge {
+            font-weight: 600;
+            color: #28a745;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            color: #1a3a7a;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 2000;
+            animation: slideInRight 0.3s ease;
+            min-width: 300px;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast.success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .toast.error {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .toast.info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .toast.warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px auto;
+                border-radius: 10px;
+            }
+            
+            .admin-nav ul {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .admin-nav a {
+                padding: 15px 20px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 20px auto;
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer button {
+                width: 100%;
+            }
+            
+            .quick-actions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .toast {
+                left: 20px;
+                right: 20px;
+                min-width: auto;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-container {
+                margin: 10px -15px;
+            }
+            
+            table {
+                font-size: 13px;
+            }
+            
+            th, td {
+                padding: 12px 10px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-sm {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="welcome-section">
+                <div>
+                    <h1>Services Management</h1>
+                    <p class="header-subtitle">Create and manage salon services with custom durations</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="admin-nav">
+            <div class="nav-container">
+                <ul>
+                    <li><a href="{{ url_for('admin_dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a></li>
+                    <li><a href="{{ url_for('admin_appointments') }}">
+                        <i class="fas fa-calendar-check"></i> Appointments
+                    </a></li>
+                    <li><a href="{{ url_for('admin_customers') }}">
+                        <i class="fas fa-users"></i> Customers
+                    </a></li>
+                    <li><a href="{{ url_for('admin_services') }}" class="active">
+                        <i class="fas fa-cut"></i> Services
+                    </a></li>
+                    <li><a href="{{ url_for('admin_settings') }}">
+                        <i class="fas fa-cog"></i> Settings
+                    </a></li>
+                    <li><a href="{{ url_for('admin_off_days') }}">
+                        <i class="fas fa-calendar-times"></i> Off Days
+                    </a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <div style="padding: 30px;">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-cut"></i></div>
+                    <div class="number">{{ services|length }}</div>
+                    <h3>Total Services</h3>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="number">{{ services|selectattr('is_active', 'equalto', true)|list|length }}</div>
+                    <h3>Active Services</h3>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-ban"></i></div>
+                    <div class="number">{{ services|selectattr('is_active', 'equalto', false)|list|length }}</div>
+                    <h3>Inactive Services</h3>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-clock"></i></div>
+                    <div class="number">
+                        {% if services %}
+                            {{ (services|map(attribute='duration')|sum / services|length)|round|int }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </div>
+                    <h3>Avg Duration (min)</h3>
+                </div>
+            </div>
+            
+            <!-- Info Box -->
+            <div class="info-box">
+                <h3><i class="fas fa-info-circle"></i> How Service Durations Work</h3>
+                <p>Each service has a specific duration that determines how appointment slots are booked:</p>
+                <ul>
+                    <li><strong>Haircut (45min):</strong> Books a 45-minute slot</li>
+                    <li><strong>Color Treatment (150min):</strong> Books a 2.5 hour slot</li>
+                    <li><strong>Services with appointments</strong> cannot be deleted - they will be deactivated instead</li>
+                    <li><strong>Deactivated services</strong> remain in the system for historical data but aren't available for new bookings</li>
+                </ul>
+            </div>
+            
+            <!-- Services Card -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                    <h2 style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                        <i class="fas fa-list"></i> Service List
+                    </h2>
+                    <button class="btn btn-success" onclick="openAddModal()">
+                        <i class="fas fa-plus"></i> Add New Service
+                    </button>
+                </div>
+                
+                {% if services %}
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Service Name</th>
+                                <th>Duration</th>
+                                <th>Price (RM)</th>
+                                <th>Description</th>
+                                <th>Appointments</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for service in services %}
+                            <tr data-service-id="{{ service.id }}" 
+                                data-service-name="{{ service.name }}"
+                                data-service-duration="{{ service.duration }}"
+                                data-service-price="{{ service.price or '' }}"
+                                data-service-description="{{ service.description or '' }}"
+                                data-service-active="{{ service.is_active|lower }}">
+                                <td>
+                                    <div class="service-name">{{ service.name }}</div>
+                                    <div class="service-duration">Created: {{ service.created_at.strftime('%d %b %Y') if service.created_at else 'N/A' }}</div>
+                                </td>
+                                <td><strong>{{ service.duration }}</strong> min</td>
+                                <td>
+                                    {% if service.price %}
+                                    <span class="price-badge">RM {{ "%.2f"|format(service.price) }}</span>
+                                    {% else %}
+                                    <span style="color: #999;">Not set</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ service.description[:50] + '...' if service.description and service.description|length > 50 else service.description or '-' }}</td>
+                                <td>
+                                    <span class="status-badge" style="background: #e9ecef; color: #495057;">
+                                        {{ service.appointments|length }} appointment(s)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge {% if service.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                        {{ 'Active' if service.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td class="action-buttons">
+                                    <button class="btn btn-warning btn-sm" onclick="editService({{ service.id }})">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteService({{ service.id }})">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-cut"></i>
+                    <h3>No Services Added Yet</h3>
+                    <p>Click the "Add New Service" button to create your first service.</p>
+                    <button class="btn btn-success" onclick="openAddModal()">
+                        <i class="fas fa-plus"></i> Add Your First Service
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Quick Actions Card -->
+            <div class="card">
+                <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                <div class="quick-actions-grid">
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('admin_appointments') }}" class="btn">
+                        <i class="fas fa-calendar-alt"></i> Appointments
+                    </a>
+                    <a href="{{ url_for('admin_customers') }}" class="btn">
+                        <i class="fas fa-users"></i> Customers
+                    </a>
+                    <a href="{{ url_for('admin_settings') }}" class="btn">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                    <a href="{{ url_for('admin_off_days') }}" class="btn">
+                        <i class="fas fa-calendar-times"></i> Off Days
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Service Modal -->
+    <div id="serviceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"><i class="fas fa-cut"></i> Add New Service</h2>
+            </div>
+            <form id="serviceForm" onsubmit="return false;">
+                <div class="modal-body">
+                    <input type="hidden" id="serviceId" name="service_id">
+                    
+                    <div class="form-group">
+                        <label for="serviceName">Service Name *</label>
+                        <input type="text" id="serviceName" name="name" required maxlength="100" placeholder="e.g., Haircut, Coloring, Treatment">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="serviceDuration">Duration (minutes) *</label>
+                            <input type="number" id="serviceDuration" name="duration" required min="15" max="480" step="15" value="60">
+                            <div class="duration-presets">
+                                <span class="preset-btn" onclick="setDuration(30)">30 min</span>
+                                <span class="preset-btn" onclick="setDuration(45)">45 min</span>
+                                <span class="preset-btn" onclick="setDuration(60)">60 min</span>
+                                <span class="preset-btn" onclick="setDuration(90)">90 min</span>
+                                <span class="preset-btn" onclick="setDuration(120)">120 min</span>
+                                <span class="preset-btn" onclick="setDuration(150)">150 min</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="servicePrice">Price (RM)</label>
+                            <input type="number" id="servicePrice" name="price" min="0" step="0.01" placeholder="Optional">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="serviceDescription">Description</label>
+                        <textarea id="serviceDescription" name="description" rows="3" placeholder="Describe the service, what it includes, any special notes..."></textarea>
+                    </div>
+                    
+                    <div class="checkbox-group" id="activeCheckboxGroup" style="display: none;">
+                        <input type="checkbox" id="serviceActive" name="is_active" checked>
+                        <label for="serviceActive">Service is active (available for booking)</label>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success" id="modalSubmitBtn">
+                        <i class="fas fa-save"></i> Add Service
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                <h2><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h2>
+            </div>
+            <div class="modal-body">
+                <div id="deleteMessage" style="margin: 20px 0; line-height: 1.8; font-size: 15px;"></div>
+                <div id="deleteWarning" style="background: #fff3cd; padding: 15px; border-radius: 8px; display: none;">
+                    <i class="fas fa-info-circle" style="color: #856404; margin-right: 8px;"></i>
+                    <span id="warningText" style="color: #856404;"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="closeDeleteModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i> Delete Service
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+    
+    <script>
+        // State
+        let currentDeleteId = null;
+        let currentDeleteName = '';
+        let currentDeleteAppointments = 0;
+
+        // DOM Elements
+        const modal = document.getElementById('serviceModal');
+        const deleteModal = document.getElementById('deleteModal');
+        const toast = document.getElementById('toast');
+
+        // Toast function
+        function showToast(message, type = 'success') {
+            toast.className = `toast ${type}`;
+            toast.innerHTML = message;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // Set duration preset
+        function setDuration(minutes) {
+            document.getElementById('serviceDuration').value = minutes;
+        }
+
+        // Open add modal
+        function openAddModal() {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-cut"></i> Add New Service';
+            document.getElementById('modalSubmitBtn').innerHTML = '<i class="fas fa-save"></i> Add Service';
+            document.getElementById('serviceForm').reset();
+            document.getElementById('serviceId').value = '';
+            document.getElementById('serviceActive').checked = true;
+            document.getElementById('activeCheckboxGroup').style.display = 'none';
+            modal.style.display = 'block';
+        }
+
+        // Close modal
+        function closeModal() {
+            modal.style.display = 'none';
+            document.getElementById('serviceForm').reset();
+        }
+
+        // Close delete modal
+        function closeDeleteModal() {
+            deleteModal.style.display = 'none';
+            currentDeleteId = null;
+            currentDeleteName = '';
+            currentDeleteAppointments = 0;
+        }
+
+        // Edit service
+        function editService(serviceId) {
+            const row = document.querySelector(`tr[data-service-id="${serviceId}"]`);
+            
+            if (!row) {
+                showToast('Service not found', 'error');
+                return;
+            }
+
+            const name = row.dataset.serviceName;
+            const duration = row.dataset.serviceDuration;
+            const price = row.dataset.servicePrice;
+            const description = row.dataset.serviceDescription;
+            const isActive = row.dataset.serviceActive === 'true';
+
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Service';
+            document.getElementById('modalSubmitBtn').innerHTML = '<i class="fas fa-save"></i> Update Service';
+            document.getElementById('serviceId').value = serviceId;
+            document.getElementById('serviceName').value = name;
+            document.getElementById('serviceDuration').value = duration;
+            document.getElementById('servicePrice').value = price || '';
+            document.getElementById('serviceDescription').value = description === '-' ? '' : description;
+            document.getElementById('serviceActive').checked = isActive;
+            document.getElementById('activeCheckboxGroup').style.display = 'block';
+            
+            modal.style.display = 'block';
+        }
+
+        // Delete service
+        function deleteService(serviceId) {
+            const row = document.querySelector(`tr[data-service-id="${serviceId}"]`);
+            
+            if (!row) {
+                showToast('Service not found', 'error');
+                return;
+            }
+
+            currentDeleteId = serviceId;
+            currentDeleteName = row.dataset.serviceName;
+            
+            // Get appointment count from the table cell
+            const appointmentCell = row.querySelector('td:nth-child(5) .status-badge');
+            const appointmentText = appointmentCell ? appointmentCell.textContent.trim() : '0 appointment(s)';
+            currentDeleteAppointments = parseInt(appointmentText) || 0;
+
+            let message = `Are you sure you want to delete <strong>"${currentDeleteName}"</strong>?`;
+            
+            if (currentDeleteAppointments > 0) {
+                message += `<br><br><strong style="color: #dc3545;">Warning:</strong> This service has <strong>${currentDeleteAppointments}</strong> appointment(s).`;
+                message += ` It will be <strong>deactivated</strong> instead of deleted to preserve appointment history.`;
+                
+                document.getElementById('deleteWarning').style.display = 'block';
+                document.getElementById('warningText').innerHTML = 
+                    `Services with appointments cannot be deleted. They will be deactivated and hidden from new bookings.`;
+            } else {
+                message += `<br><br>This action cannot be undone.`;
+                document.getElementById('deleteWarning').style.display = 'none';
+            }
+
+            document.getElementById('deleteMessage').innerHTML = message;
+            deleteModal.style.display = 'block';
+        }
+
+        // Handle delete confirmation
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+            if (!currentDeleteId) return;
+
+            // Disable button
+            this.disabled = true;
+            this.innerHTML = '<span class="loading-spinner"></span> Processing...';
+
+            try {
+                // Create form data
+                const formData = new FormData();
+                formData.append('service_id', currentDeleteId);
+
+                // Send delete request
+                const response = await fetch(`/admin/services/delete/${currentDeleteId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    closeDeleteModal();
+                    
+                    // Reload after delay
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast(data.error || 'Failed to delete service', 'error');
+                    closeDeleteModal();
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                showToast('Network error. Please try again.', 'error');
+                closeDeleteModal();
+            } finally {
+                // Restore button
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-trash"></i> Delete Service';
+            }
+        });
+
+        // Handle form submit
+        document.getElementById('serviceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('modalSubmitBtn');
+            const originalText = submitBtn.innerHTML;
+            
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Saving...';
+
+            const formData = new FormData(this);
+            const serviceId = formData.get('service_id');
+            const url = serviceId ? '/admin/services/update' : '/admin/services/add';
+
+            // Validate
+            const name = formData.get('name').trim();
+            if (!name) {
+                showToast('Service name is required', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                return;
+            }
+
+            const duration = parseInt(formData.get('duration'));
+            if (duration < 15 || duration > 480) {
+                showToast('Duration must be between 15 and 480 minutes', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    closeModal();
+                    
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast(data.error || 'Failed to save service', 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showToast('Network error. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+            if (event.target === deleteModal) {
+                closeDeleteModal();
+            }
+        };
+
+        // Close on escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+                closeDeleteModal();
+            }
+        });
+
+        // Debug function
+        window.debugServices = function() {
+            const rows = document.querySelectorAll('tr[data-service-id]');
+            const services = [];
+            rows.forEach(row => {
+                services.push({
+                    id: row.dataset.serviceId,
+                    name: row.dataset.serviceName,
+                    active: row.dataset.serviceActive,
+                    appointments: row.querySelector('td:nth-child(5) .status-badge').textContent.trim()
+                });
+            });
+            console.table(services);
+            return services;
+        };
+    </script>
+</body>
+</html>
