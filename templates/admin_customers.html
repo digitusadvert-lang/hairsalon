@@ -67,6 +67,7 @@
             list-style: none;
             display: flex;
             gap: 1px;
+            flex-wrap: wrap;
         }
         
         .admin-nav a {
@@ -124,25 +125,7 @@
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
         
-        .dashboard-btn {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .dashboard-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-        }
-        
-        /* Card Styles */
+        /* Card Styles - Matching Dashboard */
         .card {
             background: white;
             border-radius: 12px;
@@ -176,7 +159,7 @@
             font-size: 20px;
         }
         
-        /* Statistics Grid */
+        /* Statistics Grid - Matching Dashboard */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -255,7 +238,7 @@
             font-size: 18px;
         }
         
-        /* Table Styles */
+        /* Table Styles - Matching Dashboard */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -352,7 +335,7 @@
             font-size: 12px;
         }
         
-        /* Button Styles */
+        /* Button Styles - Matching Dashboard */
         .btn {
             background: linear-gradient(135deg, #2a5298 0%, #1a3a7a 100%);
             color: white;
@@ -465,10 +448,10 @@
             border-bottom: none;
         }
         
-        /* No data message */
+        /* No data message - Matching Dashboard */
         .no-data {
             text-align: center;
-            padding: 50px 20px;
+            padding: 40px 20px;
             color: #6c757d;
         }
         
@@ -483,7 +466,7 @@
             margin-bottom: 10px;
         }
         
-        /* Flash messages */
+        /* Flash messages - Matching Dashboard */
         .flash-message {
             padding: 18px;
             margin: 20px 30px;
@@ -675,7 +658,65 @@
             font-size: 15px;
         }
         
-        /* Mobile responsiveness */
+        /* Header badge */
+        .admin-badge {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .customer-id {
+            font-family: 'Courier New', monospace;
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        /* Export buttons */
+        .export-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        /* Points adjustment badge */
+        .adjustment-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .adjustment-positive {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .adjustment-negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .points-history-link {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .points-history-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive Design - Matching Dashboard */
         @media (max-width: 768px) {
             .container {
                 margin: 10px auto;
@@ -741,64 +782,6 @@
                 justify-content: center;
             }
         }
-        
-        /* Header badge */
-        .admin-badge {
-            position: absolute;
-            top: 25px;
-            right: 30px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .customer-id {
-            font-family: 'Courier New', monospace;
-            color: #6c757d;
-            font-size: 12px;
-        }
-        
-        /* Export buttons */
-        .export-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-        
-        /* Points adjustment badge */
-        .adjustment-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        
-        .adjustment-positive {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .adjustment-negative {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .points-history-link {
-            display: inline-block;
-            margin-top: 8px;
-            font-size: 12px;
-            color: #007bff;
-            text-decoration: none;
-        }
-        
-        .points-history-link:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
@@ -811,26 +794,24 @@
                     <p class="header-subtitle">View and manage all salon customers</p>
                 </div>
                 <div>
-                    
                     <a href="{{ url_for('admin_logout') }}" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>
                 </div>
             </div>
-            
         </div>
         
         <!-- Navigation -->
         <nav class="admin-nav">
             <div class="nav-container">
                 <ul>
-                    <li><a href="{{ url_for('admin_dashboard') }}" class="active">
+                    <li><a href="{{ url_for('admin_dashboard') }}">
                         <i class="fas fa-tachometer-alt"></i> Dashboard
                     </a></li>
                     <li><a href="{{ url_for('admin_appointments') }}">
                         <i class="fas fa-calendar-check"></i> Appointments
                     </a></li>
-                    <li><a href="{{ url_for('admin_customers') }}">
+                    <li><a href="{{ url_for('admin_customers') }}" class="active">
                         <i class="fas fa-users"></i> Customers
                     </a></li>
                     <li><a href="{{ url_for('admin_services') }}">
@@ -856,7 +837,7 @@
                 {% endif %}
             {% endwith %}
             
-            <!-- Statistics Cards -->
+            <!-- Statistics Cards - Matching Dashboard -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="icon"><i class="fas fa-users"></i></div>
@@ -988,7 +969,6 @@
                                                 onclick="showResetPasswordModal({{ customer.id }}, '{{ customer.name }}')">
                                             <i class="fas fa-key"></i> Reset Password
                                         </button>
-                                        <!-- Add this History button -->
                                         <a href="{{ url_for('admin_points_history', customer_id=customer.id) }}" 
                                            class="btn btn-sm" 
                                            style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white;">
@@ -1231,7 +1211,6 @@
                         // Update the points value in the table
                         const pointsElement = document.getElementById(`points-${customerId}`);
                         if (pointsElement) {
-                            const oldPoints = parseInt(pointsElement.textContent);
                             pointsElement.textContent = newPoints;
                             
                             // Add visual feedback
@@ -1409,12 +1388,10 @@
         // Export functions
         function exportCustomers() {
             alert('Export functionality would be implemented here. This would generate a CSV file with all customer data.');
-            // In a real implementation, this would make an API call to export data
         }
         
         function showReferralReport() {
             alert('Referral report would show detailed statistics about referral performance.');
-            // In a real implementation, this would show a modal with referral analytics
         }
         
         // Close modals when clicking outside
@@ -1438,6 +1415,5 @@
             }
         });
     </script>
-
 </body>
 </html>
